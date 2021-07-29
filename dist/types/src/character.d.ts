@@ -1,0 +1,10 @@
+export declare const procedures: {
+    charQ: import("./interpreter").BuiltInProcedureDefinition<"obj", ({ obj }: Partial<Record<"obj", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => import("./types").LISP.IBoolean>;
+    charEQ: import("./interpreter").BuiltInProcedureDefinition<"char1" | "char2" | "chars", ({ char1, char2, chars }: Partial<Record<"char1" | "char2" | "chars", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => import("./types").LISP.IBoolean>;
+    charLtQ: import("./interpreter").BuiltInProcedureDefinition<"char1" | "char2" | "chars", ({ char1, char2, chars }: Partial<Record<"char1" | "char2" | "chars", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => import("./types").LISP.IBoolean>;
+    charGtQ: import("./interpreter").BuiltInProcedureDefinition<"char1" | "char2" | "chars", ({ char1, char2, chars }: Partial<Record<"char1" | "char2" | "chars", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => import("./types").LISP.IBoolean>;
+    charLeQ: import("./interpreter").BuiltInProcedureDefinition<"char1" | "char2" | "chars", ({ char1, char2, chars }: Partial<Record<"char1" | "char2" | "chars", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => import("./types").LISP.IBoolean>;
+    charGeQ: import("./interpreter").BuiltInProcedureDefinition<"char1" | "char2" | "chars", ({ char1, char2, chars }: Partial<Record<"char1" | "char2" | "chars", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => import("./types").LISP.IBoolean>;
+    charToInteger: import("./interpreter").BuiltInProcedureDefinition<"char", ({ char }: Partial<Record<"char", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => import("./types").LISP.INumber>;
+    integerToChar: import("./interpreter").BuiltInProcedureDefinition<"n", ({ n }: Partial<Record<"n", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => import("./types").LISP.ICharacter>;
+};

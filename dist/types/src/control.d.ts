@@ -1,0 +1,16 @@
+import { LISP } from "./types";
+export declare const procedures: {
+    procedureQ: import("./interpreter").BuiltInProcedureDefinition<"obj", ({ obj }: Partial<Record<"obj", LISP.Object | LISP.Object[] | null>>) => LISP.IBoolean>;
+    apply: import("./interpreter").BuiltInProcedureDefinition<"args" | "proc", ({ proc, args }: Partial<Record<"args" | "proc", LISP.Object | LISP.Object[] | null>>, itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => LISP.List>;
+    map: import("./interpreter").BuiltInProcedureDefinition<"proc" | "list1" | "lists", ({ proc, list1, lists }: Partial<Record<"proc" | "list1" | "lists", LISP.Object | LISP.Object[] | null>>) => LISP.List>;
+    stringMap: import("./interpreter").BuiltInProcedureDefinition<"proc" | "str1" | "strs", ({ proc, str1, strs }: Partial<Record<"proc" | "str1" | "strs", LISP.Object | LISP.Object[] | null>>) => LISP.IString | LISP.List>;
+    vectorMap: import("./interpreter").BuiltInProcedureDefinition<"proc" | "vector1" | "vectors", ({ proc, vector1, vectors }: Partial<Record<"proc" | "vector1" | "vectors", LISP.Object | LISP.Object[] | null>>) => LISP.List | LISP.IVector>;
+    forEach: import("./interpreter").BuiltInProcedureDefinition<"proc" | "list1" | "lists", ({ proc, list1, lists }: Partial<Record<"proc" | "list1" | "lists", LISP.Object | LISP.Object[] | null>>) => LISP.IPair | LISP.INull | ["<undefined>"]>;
+    stringForEach: import("./interpreter").BuiltInProcedureDefinition<"proc" | "str1" | "strs", ({ proc, str1, strs }: Partial<Record<"proc" | "str1" | "strs", LISP.Object | LISP.Object[] | null>>) => LISP.IPair | LISP.INull | ["<undefined>"]>;
+    vectorForEach: import("./interpreter").BuiltInProcedureDefinition<"proc" | "vector1" | "vectors", ({ proc, vector1, vectors }: Partial<Record<"proc" | "vector1" | "vectors", LISP.Object | LISP.Object[] | null>>) => LISP.List>;
+    callWithCurrentContinuation: import("./interpreter").BuiltInProcedureDefinition<"proc", ({ proc }: Partial<Record<"proc", LISP.Object | LISP.Object[] | null>>, _itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => LISP.List>;
+    callCC: import("./interpreter").BuiltInProcedureDefinition<"proc", ({ proc }: Partial<Record<"proc", LISP.Object | LISP.Object[] | null>>, _itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => LISP.List>;
+    values: import("./interpreter").BuiltInProcedureDefinition<"objs", ({ objs }: Partial<Record<"objs", LISP.Object | LISP.Object[] | null>>) => LISP.Object>;
+    callWithValues: import("./interpreter").BuiltInProcedureDefinition<"producer" | "consumer", ({ producer, consumer }: Partial<Record<"producer" | "consumer", LISP.Object | LISP.Object[] | null>>, _itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => LISP.CallStack>;
+    dynamicWind: import("./interpreter").BuiltInProcedureDefinition<"before" | "after" | "thunk", ({ before, thunk, after }: Partial<Record<"before" | "after" | "thunk", LISP.Object | LISP.Object[] | null>>, _itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => LISP.CallStack>;
+};
