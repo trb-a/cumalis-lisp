@@ -619,7 +619,7 @@ export const isEnvelope = (
 ): o is Envelope => (
   !!o && typeof o === "object" &&
   o.language === PACKAGE_NAME &&
-  !!o.version && (is.Object(o.value) || is.SpecialObject(o.value))
+  !!o.version && (is.Object(o.content) || is.SpecialObject(o.content))
 );
 
 export const isCurrentVersionEnvelope = (
@@ -628,7 +628,7 @@ export const isCurrentVersionEnvelope = (
   !!o && typeof o === "object" &&
   o.language === PACKAGE_NAME &&
   o.version === PACKAGE_VERSION &&
-  (is.Object(o.value) || is.SpecialObject(o.value))
+  (is.Object(o.content) || is.SpecialObject(o.content))
 );
 
 export const isSuspendEnvelope = (

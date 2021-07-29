@@ -52,14 +52,14 @@ const num = toJS(ret); // returns 2.
   - R7RS Standard procedures other than "core library" is not implemented.
   - library features (import/export/define-library/cond-expand) are not implemented.
   - Only integer and real number is supported.
-    - Complex / fraction number is not implemented.
-    - 1.0 and 1 is same value. (like Javascript's number).
-    - "exact" means Javascript's Number.isSafeInteger is true.
+    * Complex / fraction number is not implemented.
+    * 1.0 and 1 is same value. (like Javascript's number).
+    * "exact" means Javascript's Number.isSafeInteger is true.
   - (eqv? "aaa" "aaa) returns #t. (like Javascript's "aaa" === "aaa" returns true).
   - Limited syntax-rules support.
-   - Only lists are supported. No vector rules.
-   - Only flat patterns are supported. No nexted patterns.
-   - No improper lists.
+   * Only lists are supported. No vector rules.
+   * Only flat patterns are supported. No nexted patterns.
+   * No improper lists.
   - #!fold-case does downcase (by Javascript's String.toLowerCase).
   - Hexadecial, octal, binary literals can't have digits.
   - Strings doesn't handle surrogate pairs correctly. (Works like Javascript string).
@@ -67,7 +67,6 @@ const num = toJS(ret); // returns 2.
   - "exact-integer-sqrt is very slow, can calculate exact integer & positive value.
 
 ## TODO
-  TODO★ suspend/resumeを試す。
   - Better documentation (espacially Javascript interface).
   - REPL for Node.js.
   - Expose all items in create, forms, part of functions and LISP that can be called directly for usability.

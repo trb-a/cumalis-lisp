@@ -1,21 +1,22 @@
-/* eslint-disable */
 import fs from "fs";
-import { assert, contentCS, create, defineBuiltInProcedure, forms, is } from "../src/utils";
-// import { fromReferentialJSON, toReferentialJSON } from "../src/utils";
+import { assert, contentCS, create, defineBuiltInProcedure, forms, fromReferentialJSON, is, isSuspendEnvelope, suspendValueFromEnvelope, toReferentialJSON } from "../src/utils";
 import { equalQ } from "../src/equivalence";
 import { writeString } from "../src/port";
-import { writeObject } from "../src/unparser";
-import { Interpreter } from "../src/interpreter";
+import { toJS, writeObject } from "../src/unparser";
+import { Envelope, Interpreter } from "../src/interpreter";
+import { LISP } from "../src/types";
 
 const logger = console; // To avoid to type console dot log.
 const r7rsTest = fs.readFileSync("./__tests__/r7rs.scm").toString();
 
+// This is for testing serialize/deserialize for every call-frame.
+// Very slow!
 // const beforeExecute: InterpreterOptions["beforeExecute"] = (stack, value) => {
 //   const json = toReferentialJSON([stack, value], "$$$");
 //   return fromReferentialJSON(json, "$$$");
 // }
-
 // const itrp = new Interpreter({fs, debug: false, verbose: false, beforeExecute});
+
 const itrp = new Interpreter({fs});
 
 let testCount = 0;
@@ -47,7 +48,7 @@ const test1Proc = defineBuiltInProcedure("test-1", [
   } else {
     failCount++;
     logger.log("******** <<<< [[ NG! ]] >>>> **********" + "\nReturned value:" + writeObject(target));
-  };
+  }
   return ["<undefined>"];
 });
 
@@ -116,17 +117,45 @@ itrp.setBuiltInProcedure(testBeginProc);
 itrp.setBuiltInProcedure(testEndProc);
 itrp.setBuiltInProcedure(displayProc);
 
-try {
-  itrp.eval(r7rsTest);
-} catch (e) {
-  if (e instanceof Error) {
-    logger.log("R7RSTEST: JS EXCEPTOION", e.name, e.message, "\n", e.stack);
-  } else {
-    logger.log("ERROR\n", typeof e, e);
-  }
-  throw e;
-}
-
 test('Results', () => {
+  try {
+    itrp.eval(r7rsTest);
+  } catch (e) {
+    if (e instanceof Error) {
+      logger.log("R7RSTEST: JS EXCEPTOION", e.name, e.message, "\n", e.stack);
+    } else {
+      logger.log("ERROR\n", typeof e, e);
+    }
+    throw e;
+  }
+  logger.log(`EXECUTED ${testCount} tests.`)
   expect(failCount).toBe(0);
+});
+
+test('suspend / serialize / deserialize / resume and toJS.', () => {
+  // Suspend
+  let suspend: Envelope;
+  try {
+    itrp.eval(`(+ 11 (suspend 100))`);
+  } catch (e) {
+    suspend = e;
+  }
+  expect(isSuspendEnvelope(suspend)).toBe(true);
+  if (!isSuspendEnvelope(suspend)) {
+    return;
+  }
+  expect(toJS(suspendValueFromEnvelope(suspend))).toBe(100);
+
+  // Serialize/Deserialize
+  const json = toReferentialJSON(suspend, "$$$");
+  const revived: LISP.Suspend = fromReferentialJSON(json, "$$$");
+  expect(isSuspendEnvelope(revived)).toBe(true);
+  if(!isSuspendEnvelope(revived)) {
+    return;
+  }
+  expect(toJS(suspendValueFromEnvelope(revived))).toBe(100);
+
+  // Resume
+  const ret = itrp.resume(revived, create.Number(31));
+  expect(toJS(ret)).toBe(42);
 });

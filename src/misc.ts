@@ -3,13 +3,15 @@
 import { assert, create, defineBuiltInProcedure, assertNonNull, parentCS } from "./utils";
 
 const suspend = defineBuiltInProcedure("suspend", [
-  { name: "obj" },
+  { name: "obj", type: "optional" },
 ], ({ obj }, _itrp, stack) => {
-  assert.Object(obj);
   assertNonNull(stack);
+  if (obj) {
+    assert.Object(obj);
+  }
   throw create.Suspend(
     create.Continuation(parentCS(stack)!),
-    obj
+    obj ?? create.Undefined()
   );
 });
 

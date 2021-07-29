@@ -300,7 +300,7 @@ export class Interpreter {
     return this.evalAST(forms.Begin(fromJS(tree)));
   }
   // Restart with #SUSPEND# object or Envelope with #SUSPEND.
-  resume(suspend: Envelope | LISP.Suspend, value = create.Undefined()): LISP.Object {
+  resume(suspend: Envelope | LISP.Suspend, value: LISP.Object = create.Undefined()): LISP.Object {
     if (isEnvelope(suspend) && !isSuspendEnvelope(suspend)) {
       throw new Error("The content of envelope is not #SUSPEND# object.");
     }
@@ -565,8 +565,8 @@ export class Interpreter {
               }
             }
           } catch (e) {
-            if (is.Object(e)) {
-              if (!is.Exception(e)) {
+            if (is.Object(e) || is.SpecialObject(e)) {
+              if (!is.Exception(e) && !is.SpecialObject(e)) {
                 throw create.Exception(cstack, e, false);
               } else {
                 throw e;
