@@ -1,0 +1,64 @@
+{
+  "name": "cumalis-lisp",
+  "version": "0.5.0",
+  "description": "A Scheme implementation written in Typescript.",
+  "keywords": [
+    "SCHEME",
+    "LISP",
+    "R7RS"
+  ],
+  "homepage": "https://github.com/trb-a/cumalis-lisp#readme",
+  "bugs": {
+    "url": "https://github.com/trb-a/cumalis-lisp/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trb-a/cumalis-lisp.git"
+  },
+  "license": "MIT",
+  "author": "Tsunemasa Akasaka <akasaka@toribune.co.jp>",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "browser": "dist/index.umd.js",
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "prebuild": "yarn test && yarn clean",
+    "build": "yarn build:types && yarn build:js",
+    "build:js": "rollup -c",
+    "build:types": "tsc --emitDeclarationOnly",
+    "clean": "rimraf dist",
+    "lint": "eslint src/**/* --fix",
+    "prerelease": "yarn build",
+    "release": "yarn standard-version",
+    "postrelease": "git push --follow-tags",
+    "pretest": "yarn lint",
+    "test": "jest",
+    "test:cov": "yarn test -- --coverage",
+    "types:check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.14.6",
+    "@babel/preset-env": "^7.14.7",
+    "@babel/preset-typescript": "^7.14.5",
+    "@rollup/plugin-commonjs": "^19.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "@types/jest": "^26.0.23",
+    "@types/node": "^15.12.4",
+    "@typescript-eslint/eslint-plugin": "^4.28.0",
+    "@typescript-eslint/parser": "^4.28.0",
+    "eslint": "^7.29.0",
+    "eslint-plugin-jest": "^24.3.6",
+    "jest": "^27.0.5",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.52.2",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "standard-version": "^9.3.1",
+    "ts-node": "^10.1.0",
+    "typescript": "^4.3.4"
+  }
+}
