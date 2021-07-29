@@ -6,7 +6,6 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
-    // "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "jsx": "react",
