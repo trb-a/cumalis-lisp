@@ -19,7 +19,7 @@ const define = defineBuiltInProcedure("define", [
   assert.Objects(arg2);
   assertNonNull(itrp);
   assertNonNull(stack);
-  const isTopLevel = contentCS(stack).depth <= 1;
+  const isTopLevel = contentCS(stack).depth <= (itrp.getOptions().toplevelDepth ?? 1);
   if (is.Symbol(arg1)) {
     const symbol = arg1;
     const [init] = arg2;
@@ -58,7 +58,7 @@ const defineValues = defineBuiltInProcedure("define-values", [
   assert.Object(expr);
   assertNonNull(itrp);
   assertNonNull(stack);
-  const isTopLevel = contentCS(stack).depth <= 1;
+  const isTopLevel = contentCS(stack).depth <= (itrp.getOptions().toplevelDepth ?? 1);
   const [ups, vp] = formalsToParameters(formals);
   const args = is.MultiValue(expr) ? expr[1] : [expr];
   for (let i = 0; i < ups.length; i++) {
@@ -89,7 +89,7 @@ const defineSyntax = defineBuiltInProcedure("define-syntax", [
   assert.SyntaxRules(spec);
   assertNonNull(itrp);
   assertNonNull(stack);
-  const isTopLevel = contentCS(stack).depth <= 1;
+  const isTopLevel = contentCS(stack).depth <= (itrp.getOptions().toplevelDepth ?? 1);
   if (!isTopLevel && !is.Undefined(contentStack(contentCS(stack).env.static)[keyword[1]] ?? ["<undefined>"])) {
     throw create.Error("redefine-variable", null);
   }
@@ -118,7 +118,7 @@ const defineRecordType = defineBuiltInProcedure("define-record-type", [
   assert.Pairs(fields);
   assertNonNull(itrp);
   assertNonNull(stack);
-  const isTopLevel = contentCS(stack).depth <= 1;
+  const isTopLevel = contentCS(stack).depth <= (itrp.getOptions().toplevelDepth ?? 1);
   if (!isTopLevel && (
     !is.Undefined(contentStack(contentCS(stack).env.static)[name[1]] ?? ["<undefined>"]) ||
     !is.Undefined(contentStack(contentCS(stack).env.static)[pred[1]] ?? ["<undefined>"])

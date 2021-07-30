@@ -21,7 +21,9 @@ export type {
   BuiltInProcedureDefinition,
   InterpreterOptions,
   PlugIn,
-  Envelope
+  Envelope,
+  PACKAGE_NAME,
+  PACKAGE_VERSION
 } from "./interpreter";
 export {
   create,
@@ -40,4 +42,6 @@ export {
   isEnvelope,
   isSuspendEnvelope,
   suspendValueFromEnvelope,
+  transferCS,
+  forkCS,
 } from "./utils";

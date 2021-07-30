@@ -29,6 +29,7 @@ import { procedures as miscProcedures } from "./misc";
 // -------------------------------------------------------
 //                       Consant
 // -------------------------------------------------------
+export { PACKAGE_NAME, PACKAGE_VERSION };
 
 const BuiltInProcedureDefinitions: BuiltInProcedureDefinition[] = [
   ...Object.values(booleanProcedures),
@@ -68,6 +69,7 @@ export type InterpreterOptions = {
   fs?: typeof NodeFS_NS; // Node.js's "fs" module.
   beforeExecute?: (stack: LISP.CallStack, value: LISP.Object | null) => [stack: LISP.CallStack, value: LISP.Object] | undefined,
   afterExecute?: (next: LISP.CallStack | null, result: LISP.Object | null, current: LISP.CallStack, value: LISP.Object | null) => void,
+  toplevelDepth?: number, // Change the depth of stack to think as toplevel. REPL may change this. Default: 1.
 };
 
 // Note: Functions that doesn't need itrp & stack can be called directly.

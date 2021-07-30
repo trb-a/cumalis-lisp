@@ -1,6 +1,8 @@
 /// <reference types="node" />
+import { name as PACKAGE_NAME, version as PACKAGE_VERSION } from "../package.json";
 import { LISP } from "./types";
 import type NodeFS_NS from "fs";
+export { PACKAGE_NAME, PACKAGE_VERSION };
 export declare const DEFAULT_CALL_STACK_SIZE = 16384;
 export declare type PlugIn = (itpr: Interpreter) => void;
 export declare type InterpreterOptions = {
@@ -12,6 +14,7 @@ export declare type InterpreterOptions = {
     fs?: typeof NodeFS_NS;
     beforeExecute?: (stack: LISP.CallStack, value: LISP.Object | null) => [stack: LISP.CallStack, value: LISP.Object] | undefined;
     afterExecute?: (next: LISP.CallStack | null, result: LISP.Object | null, current: LISP.CallStack, value: LISP.Object | null) => void;
+    toplevelDepth?: number;
 };
 export declare type BuiltInProcedureBody<T extends Partial<Record<string, LISP.Object | LISP.Object[] | null>> = Partial<Record<string, LISP.Object | LISP.Object[] | null>>, U extends LISP.Object | LISP.CallStack = LISP.Object | LISP.CallStack> = (args: T, itrp?: Interpreter, stack?: LISP.CallStack) => U;
 export declare type BuiltInProcedureDefinition<T extends string = string, U extends BuiltInProcedureBody<Record<T, LISP.Object | LISP.Object[] | null>> = BuiltInProcedureBody<Record<T, LISP.Object | LISP.Object[] | null>>> = {
