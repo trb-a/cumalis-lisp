@@ -34,7 +34,7 @@ $ npm install cumalis-lisp
 
 ## Web REPL
   
-  [Cumalis Lisp Web REPL](https://github.com/trb-a/cumalis-lisp/docs/web-repl/index.html)
+  [Cumalis Lisp Web REPL](https://trb-a.github.io/cumalis-lisp/web-repl.html)
 
 ## How to use as a module
 
