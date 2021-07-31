@@ -4,13 +4,21 @@
 /** @typedef { import("../src/index").Envelope } Envelope */
 /** @typedef { import("../src/index").LISP.Object } LObject */
 /** @typedef { import("../src/index").LISP.Suspend } LSuspend */
+/// <reference path="../types/jquery.terminal.d.ts"/>
 
+// Just an alias to avoid to write console-dot-log.
 var logger = console;
 
 /**  @type {Scheme} */
 var L = window["Scheme"];
+// Normally, the depth of the call-stack to be taken as "top level" is set to 1.
+// In this REPL, it is changed to 2. Because the expressions are evaluated in the
+// form like:
+//   (eval (suspend <expression-as-toplevel>))
+// See R7RS 5.3.1. "Top level definitions".
 var itrp = new L.Interpreter({ toplevelDepth: 2 });
 
+// IMPROVEME: delete this once we have implemented "eval library"
 itrp.setBuiltInProcedure(
   L.defineBuiltInProcedure("eval", [
     { name: "obj" }
@@ -24,7 +32,6 @@ itrp.setBuiltInProcedure(
 
 /** @type {LSuspend} */
 var suspend;
-// IMPROVEME need to find a way to be toplevel.
 try {
   itrp.evalAST(
     L.forms.CallBuiltIn("eval",
@@ -62,7 +69,7 @@ $("#term").terminal(function (cmd, t) {
     }
   }
 }, {
-  greetings: `Cumalis Lisp REPL`,
+  greetings: `Cumalis Lisp Web REPL`,
   keymap: {
     "CTRL+C": function () { } // disable the original function.
   }
