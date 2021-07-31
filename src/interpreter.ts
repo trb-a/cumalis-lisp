@@ -26,6 +26,9 @@ import { procedures as symbolProcedures } from "./symbol";
 import { procedures as vectorProcedures } from "./vector";
 import { procedures as miscProcedures } from "./misc";
 
+import WriteLibrary from "./libraries/write";
+import ReadLibrary from "./libraries/read";
+
 // -------------------------------------------------------
 //                       Consant
 // -------------------------------------------------------
@@ -48,6 +51,11 @@ const BuiltInProcedureDefinitions: BuiltInProcedureDefinition[] = [
   ...Object.values(vectorProcedures),
   ...Object.values(miscProcedures),
 ];
+
+const BuiltInLibraryDefinitions: Record<string, BuiltInLibraryDefinition> = {
+  "(scheme write)": WriteLibrary,
+  "(scheme read)": ReadLibrary,
+};
 
 const BuiltInJSObjects: [string, LISP.Object][] = [
   // Nothing at this moment
@@ -105,6 +113,10 @@ export type BuiltInPortDefinition = {
   binary?(): boolean; // Not specified means text mode.
 };
 
+export type BuiltInLibraryDefinition = (
+  itrp: Interpreter,
+) => Dictionary<LISP.Object>;
+
 // Envelope (To throw/return special data with interpreter name and version).
 export type Envelope = {
   language: string,
@@ -137,6 +149,7 @@ export class Interpreter {
       "current-output-port": create.Port("built-in", "//output", "w", null, ""),
       "current-error-port": create.Port("built-in", "//error", "w", null, ""),
     } as Dictionary<LISP.Object>,
+    library: {} as Dictionary<BuiltInLibraryDefinition>,
   };
   // "fs" can be specified on node.js environment.
   // This enables writing to / reading from file discriptors as a port.
@@ -149,7 +162,7 @@ export class Interpreter {
 
     BuiltInJSObjects.forEach(([name, value]) => this.setBuiltInJSObject(name, value));
     BuiltInProcedureDefinitions.forEach(definition => this.setBuiltInProcedure(definition));
-
+    Object.keys(BuiltInLibraryDefinitions).forEach(key => this.setBuiltInLibrary(key, BuiltInLibraryDefinitions[key]));
     options?.plugins?.forEach(plugin => plugin(this));
   }
 
@@ -181,6 +194,13 @@ export class Interpreter {
     }
     this.builtins.port[name] = value;
     return obj;
+  }
+  setBuiltInLibrary(name: string, value: BuiltInLibraryDefinition, overwrite = false): LISP.Symbol {
+    if (!overwrite && this.getBuiltInPort(name)) {
+      return create.Symbol(name);
+    }
+    this.builtins.library[name] = value;
+    return create.Symbol(name);
   }
   getProcedureContent(proc: LISP.Procedure): (
     { parameters: LISP.ProcedureParameter[], body: LISP.Object, isMacro: boolean, env: LISP.Env} |
@@ -226,6 +246,12 @@ export class Interpreter {
   getBuiltInPort(name: string): BuiltInPortDefinition | null {
     if (hasOwnProperty.call(this.builtins.port, name)) {
       return this.builtins.port[name];
+    }
+    return null;
+  }
+  getBuiltInLibrary(name: string): BuiltInLibraryDefinition | null {
+    if (hasOwnProperty.call(this.builtins.library, name)) {
+      return this.builtins.library[name];
     }
     return null;
   }

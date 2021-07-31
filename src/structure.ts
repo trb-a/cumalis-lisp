@@ -4,12 +4,44 @@
 
 import { eqvQ } from "./equivalence";
 import { LISP } from "./types";
+import { writeObject } from "./unparser";
 import { assertNonNull, assert, is,  contentStack, create, forms, defineBuiltInProcedure, formalsToParameters, listToArray, contentCS } from "./utils";
 
 // ------------------------------------------------
 
-// Library features are not supported yet.
-// import
+// Note: Very limited support.
+// Only importing built-in library at the top-level is supported.
+// only, except, prefix, rename is not supported.
+const Import = defineBuiltInProcedure("import", [
+  { name: "sets", type: "variadic", evaluate: false }
+], ({ sets }, itrp, stack): LISP.Object => {
+  assert.Objects(sets);
+  assertNonNull(itrp);
+  assertNonNull(stack);
+
+  const isTopLevel = contentCS(stack).depth <= (itrp.getOptions().toplevelDepth ?? 1);
+  if (!isTopLevel) {
+    throw create.Error("not-implemented", `"import" is only supported on the toplevel.`);
+  }
+  const setStrs = sets.map(item => writeObject(item));
+  if (setStrs.some(item => ["(only ", "(except ", "(prefix ", "(rename "].some(str => item.indexOf(str) === 0))) {
+    throw create.Error("not-implemented", `"import" with "only", "except", "prefix", or "rename" is not supported yet.`);
+  }
+  for (const item of setStrs) {
+    if (item === "(scheme base)") {
+      continue; // "(scheme base)" is loaded by default.
+    }
+    const lib = itrp.getBuiltInLibrary(item);
+    if (!lib) {
+      throw create.Error("error", `Library "${lib} not found."`);
+    }
+    const dict = lib(itrp);
+    for (const name of Object.keys(dict)) {
+      itrp.defineStatic(contentCS(stack).env.static, create.Symbol(name), dict[name]);
+    }
+  }
+  return ["<undefined>"];
+}, true);
 
 const define = defineBuiltInProcedure("define", [
   { name: "arg1", evaluate: false },
@@ -246,6 +278,7 @@ const recordSetD = defineBuiltInProcedure("record-set!", [
 // define-library
 
 export const procedures = {
+  Import,
   define, defineValues, defineSyntax, defineRecordType,
   makeRecord, recordTypeQ, recordGet, recordSetD,
 };

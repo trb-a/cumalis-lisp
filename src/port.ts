@@ -208,7 +208,7 @@ const getOutputBytevector = defineBuiltInProcedure("get-output-bytevector", [
 
 // (read port) read library procedure
 
-const readChar = defineBuiltInProcedure("read-char", [
+export const readChar = defineBuiltInProcedure("read-char", [
   { name: "port", type: "optional" }
 ], ({ port }, itrp, stack): LISP.Character | LISP.EndOfFile => {
   assertNonNull(itrp);

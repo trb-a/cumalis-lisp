@@ -1,7 +1,6 @@
 import fs from "fs";
 import { assert, contentCS, create, defineBuiltInProcedure, forms, fromReferentialJSON, is, isSuspendEnvelope, suspendValueFromEnvelope, toReferentialJSON } from "../src/utils";
 import { equalQ } from "../src/equivalence";
-import { writeString } from "../src/port";
 import { toJS, writeObject } from "../src/unparser";
 import { Envelope, Interpreter } from "../src/interpreter";
 import { LISP } from "../src/types";
@@ -97,25 +96,12 @@ const testEndProc = defineBuiltInProcedure("test-end", [
   return ["<undefined>"];
 });
 
-// Note: this is not enough implementation.
-// Just for testing.
-const displayProc = defineBuiltInProcedure("display", [
-  { name: "obj"},
-  { name: "port", type: "optional"}
-], ({obj, port}, itrp, stack) => {
-  assert.Object(obj);
-  const str = create.String(writeObject(obj).replace(/^"|"$/g, ""), false);
-  writeString.body({str, port}, itrp, stack);
-  return ["<undefined>"];
-});
-
 itrp.setBuiltInProcedure(testProc);
 itrp.setBuiltInProcedure(test1Proc);
 itrp.setBuiltInProcedure(testValuesProc);
 itrp.setBuiltInProcedure(testValues1Proc);
 itrp.setBuiltInProcedure(testBeginProc);
 itrp.setBuiltInProcedure(testEndProc);
-itrp.setBuiltInProcedure(displayProc);
 
 test('Results', () => {
   try {
@@ -159,3 +145,26 @@ test('suspend / serialize / deserialize / resume and toJS.', () => {
   const ret = itrp.resume(revived, create.Number(31));
   expect(toJS(ret)).toBe(42);
 });
+
+// test('Results', () => {
+//   try {
+//     console.log(
+//       writeObject(
+//       itrp.eval(`
+//       (import (scheme base) (scheme write) (scheme read))
+//       ; (test "line 1\\n\\nline 3\\n"
+//       (read (open-input-string "\\"line 1\\\\ \\t \\n \\t \\n\\nline 3\\n\\"")) ;
+
+//       `)
+//     ))
+//   } catch (e) {
+//     if (e instanceof Error) {
+//       logger.log("R7RSTEST: JS EXCEPTOION", e.name, e.message, "\n", e.stack);
+//     } else {
+//       logger.log("ERROR\n", typeof e, e);
+//     }
+//     throw e;
+//   }
+//   logger.log(`EXECUTED ${testCount} tests.`)
+//   expect(failCount).toBe(0);
+// });

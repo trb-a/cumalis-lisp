@@ -1,11 +1,10 @@
-
-
 ;X #!r7rs
 
 ;X This test is a copied and modified from rachet-r7rs's test. (by lexi-lambda)
 ;X https://github.com/lexi-lambda/racket-r7rs/blob/master/r7rs-test/tests/r7rs/chibi/tests/r7rs-tests.rkt
 
 ;X[library is not supported]
+(import (scheme base) (scheme write) (scheme read))
 ;X (import (scheme base) (scheme char) (scheme lazy)
 ;X         (scheme inexact) (scheme complex) (scheme time)
 ;X         (scheme file) (scheme read) (scheme write)
@@ -1671,7 +1670,7 @@
 
 (test #f
     (read-error? (guard (exn (else exn)) (error "BOOM!"))))
-;X[read library]
+;X[IMPROVEME]
 ;X(test #t
 ;X    (read-error? (guard (exn (else exn)) (read (open-input-string ")")))))
 
@@ -1725,28 +1724,26 @@
   (test 65 value))
 
 ;X;; From SRFI-34 "Examples" section - #3
-;X[write library]
-;X(define (test-exception-handler-3 v out)
-;X  (guard (condition
-;X          (else
-;X           (display "condition: " out)
-;X           (write condition out)
-;X           (display #\! out)
-;X           'exception))
-;X         (+ 1 (if (= v 0) (raise 'an-error) (/ 10 v)))))
-;X(let* ((out (open-output-string))
-;X       (value (test-exception-handler-3 0 out)))
-;X  (test 'exception value)
-;X  (test "condition: an-error!" (get-output-string out)))
-;X
+(define (test-exception-handler-3 v out)
+  (guard (condition
+          (else
+           (display "condition: " out)
+           (write condition out)
+           (display #\! out)
+           'exception))
+         (+ 1 (if (= v 0) (raise 'an-error) (/ 10 v)))))
+(let* ((out (open-output-string))
+       (value (test-exception-handler-3 0 out)))
+  (test 'exception value)
+  (test "condition: an-error!" (get-output-string out)))
 
 (define (test-exception-handler-4 v out)
   (call-with-current-continuation
    (lambda (k)
      (with-exception-handler
       (lambda (x)
-;X        (display "reraised " out)
-;X        (write x out) (display #\! out)
+        (display "reraised " out)
+        (write x out) (display #\! out)
         (k 'zero))
       (lambda ()
         (guard (condition
@@ -1767,11 +1764,10 @@
   (test "" (get-output-string out))
   (test 'negative value))
 ;; From SRFI-34 "Examples" section - #7
-;#[write library]
-;#(let* ((out (open-output-string))
-;#       (value (test-exception-handler-4 0 out)))
-;#  (test "reraised 0!" (get-output-string out))
-;#  (test 'zero value))
+(let* ((out (open-output-string))
+       (value (test-exception-handler-4 0 out)))
+  (test "reraised 0!" (get-output-string out))
+  (test 'zero value))
 
 ;; From SRFI-34 "Examples" section - #8
 (test 42
@@ -1862,11 +1858,9 @@
       (guard (exn (else 'error)) (write-char #\c out))))
 
 (test #t (eof-object? (eof-object)))
-;X[read library]
-;X(test #t (eof-object? (read (open-input-string ""))))
+(test #t (eof-object? (read (open-input-string ""))))
 (test #t (char-ready? (open-input-string "42")))
-;X[read library]
-;X(test 42 (read (open-input-string " 42 ")))
+(test 42 (read (open-input-string " 42 ")))
 
 (test #t (eof-object? (read-char (open-input-string ""))))
 (test #\a (read-char (open-input-string "abc")))
@@ -1893,23 +1887,22 @@
       (write-char #\x10F700 out)
       (get-output-string out)))
 
-;X[write library]
-;X(test "abc"
-;X    (let ((out (open-output-string)))
-;X      (write 'abc out)
-;X      (get-output-string out)))
-;X
-;X(test "abc def"
-;X    (let ((out (open-output-string)))
-;X      (display "abc def" out)
-;X      (get-output-string out)))
-;X
-;X(test "abc"
-;X    (let ((out (open-output-string)))
-;X      (display #\a out)
-;X      (display "b" out)
-;X      (display #\c out)
-;X      (get-output-string out)))
+(test "abc"
+    (let ((out (open-output-string)))
+      (write 'abc out)
+      (get-output-string out)))
+
+(test "abc def"
+    (let ((out (open-output-string)))
+      (display "abc def" out)
+      (get-output-string out)))
+
+(test "abc"
+    (let ((out (open-output-string)))
+      (display #\a out)
+      (display "b" out)
+      (display #\c out)
+      (get-output-string out)))
 
 (test #t
       (let* ((out (open-output-string))
@@ -1992,7 +1985,7 @@
     (flush-output-port out)
     (get-output-bytevector out)))
 
-;X[write library]
+;X[labels not guaranteed to be 0 indexed, spacing may differ]
 ;X(test #t
 ;X    (and (member
 ;X          (let ((out (open-output-string))
@@ -2009,13 +2002,14 @@
 ;X          (x (list 1 2 3)))
 ;X      (write (list x x) out)
 ;X      (get-output-string out)))
-;X
-;X(test "((1 2 3) (1 2 3))"
-;X    (let ((out (open-output-string))
-;X          (x (list 1 2 3)))
-;X      (write-simple (list x x) out)
-;X      (get-output-string out)))
-;X
+
+(test "((1 2 3) (1 2 3))"
+    (let ((out (open-output-string))
+          (x (list 1 2 3)))
+      (write-simple (list x x) out)
+      (get-output-string out)))
+
+;X[labels not guaranteed to be 0 indexed, spacing may differ]
 ;X(test #t
 ;X    (and (member (let ((out (open-output-string))
 ;X                       (x (list 1 2 3)))
@@ -2024,61 +2018,60 @@
 ;X                 '("(#0=(1 2 3) #0#)" "(#1=(1 2 3) #1#)"))
 ;X         #t))
 
-;X[read library]
-;X(test-begin "Read syntax")
-;X
-;X;; check reading boolean followed by eof
-;X[read library]
-;X(test #t (read (open-input-string "#t")))
-;X(test #t (read (open-input-string "#true")))
-;X(test #f (read (open-input-string "#f")))
-;X(test #f (read (open-input-string "#false")))
-;X(define (read2 port)
-;X  (let* ((o1 (read port)) (o2 (read port)))
-;X    (cons o1 o2)))
-;X;; check reading boolean followed by delimiter
-;X(test '(#t . (5)) (read2 (open-input-string "#t(5)")))
-;X(test '(#t . 6) (read2 (open-input-string "#true 6 ")))
-;X(test '(#f . 7) (read2 (open-input-string "#f 7")))
-;X(test '(#f . "8") (read2 (open-input-string "#false\"8\"")))
-;X
-;X(test '() (read (open-input-string "()")))
-;X(test '(1 2) (read (open-input-string "(1 2)")))
-;X(test '(1 . 2) (read (open-input-string "(1 . 2)")))
-;X(test '(1 2) (read (open-input-string "(1 . (2))")))
-;X(test '(1 2 3 4 5) (read (open-input-string "(1 . (2 3 4 . (5)))")))
-;X(test '1 (cadr (read (open-input-string "#0=(1 . #0#)"))))
-;X(test '(1 2 3) (cadr (read (open-input-string "(#0=(1 2 3) #0#)"))))
-;X
-;X(test '(quote (1 2)) (read (open-input-string "'(1 2)")))
-;X(test '(quote (1 (unquote 2))) (read (open-input-string "'(1 ,2)")))
-;X(test '(quote (1 (unquote-splicing 2))) (read (open-input-string "'(1 ,@2)")))
-;X(test '(quasiquote (1 (unquote 2))) (read (open-input-string "`(1 ,2)")))
-;X
-;X(test #() (read (open-input-string "#()")))
-;X(test #(a b) (read (open-input-string "#(a b)")))
-;X
-;X(test #u8() (read (open-input-string "#u8()")))
-;X(test #u8(0 1) (read (open-input-string "#u8(0 1)")))
-;X
-;X(test 'abc (read (open-input-string "abc")))
-;X(test 'abc (read (open-input-string "abc def")))
-;X(test 'ABC (read (open-input-string "ABC")))
-;X(test 'Hello (read (open-input-string "|H\\x65;llo|")))
-;X
-;X(test 'abc (read (open-input-string "#!fold-case ABC")))
-;X(test 'ABC (read (open-input-string "#!fold-case #!no-fold-case ABC")))
-;X
-;X(test 'def (read (open-input-string "#; abc def")))
-;X(test 'def (read (open-input-string "; abc \ndef")))
-;X(test 'def (read (open-input-string "#| abc |# def")))
-;X(test 'ghi (read (open-input-string "#| abc #| def |# |# ghi")))
-;X(test 'ghi (read (open-input-string "#; ; abc\n def ghi")))
-;X(test '(abs -16) (read (open-input-string "(#;sqrt abs -16)")))
-;X(test '(a d) (read (open-input-string "(a #; #;b c d)")))
-;X(test '(a e) (read (open-input-string "(a #;(b #;c d) e)")))
-;X(test '(a . c) (read (open-input-string "(a . #;b c)")))
-;X
+(test-begin "Read syntax")
+
+;; check reading boolean followed by eof
+(test #t (read (open-input-string "#t")))
+(test #t (read (open-input-string "#true")))
+(test #f (read (open-input-string "#f")))
+(test #f (read (open-input-string "#false")))
+(define (read2 port)
+  (let* ((o1 (read port)) (o2 (read port)))
+    (cons o1 o2)))
+;; check reading boolean followed by delimiter
+(test '(#t . (5)) (read2 (open-input-string "#t(5)")))
+(test '(#t . 6) (read2 (open-input-string "#true 6 ")))
+(test '(#f . 7) (read2 (open-input-string "#f 7")))
+(test '(#f . "8") (read2 (open-input-string "#false\"8\"")))
+
+(test '() (read (open-input-string "()")))
+(test '(1 2) (read (open-input-string "(1 2)")))
+(test '(1 . 2) (read (open-input-string "(1 . 2)")))
+(test '(1 2) (read (open-input-string "(1 . (2))")))
+(test '(1 2 3 4 5) (read (open-input-string "(1 . (2 3 4 . (5)))")))
+(test '1 (cadr (read (open-input-string "#0=(1 . #0#)"))))
+(test '(1 2 3) (cadr (read (open-input-string "(#0=(1 2 3) #0#)"))))
+
+(test '(quote (1 2)) (read (open-input-string "'(1 2)")))
+(test '(quote (1 (unquote 2))) (read (open-input-string "'(1 ,2)")))
+(test '(quote (1 (unquote-splicing 2))) (read (open-input-string "'(1 ,@2)")))
+(test '(quasiquote (1 (unquote 2))) (read (open-input-string "`(1 ,2)")))
+
+(test #() (read (open-input-string "#()")))
+(test #(a b) (read (open-input-string "#(a b)")))
+
+(test #u8() (read (open-input-string "#u8()")))
+(test #u8(0 1) (read (open-input-string "#u8(0 1)")))
+
+(test 'abc (read (open-input-string "abc")))
+(test 'abc (read (open-input-string "abc def")))
+(test 'ABC (read (open-input-string "ABC")))
+(test 'Hello (read (open-input-string "|H\\x65;llo|")))
+
+(test 'abc (read (open-input-string "#!fold-case ABC")))
+(test 'ABC (read (open-input-string "#!fold-case #!no-fold-case ABC")))
+
+(test 'def (read (open-input-string "#; abc def")))
+(test 'def (read (open-input-string "; abc \ndef")))
+(test 'def (read (open-input-string "#| abc |# def")))
+(test 'ghi (read (open-input-string "#| abc #| def |# |# ghi")))
+(test 'ghi (read (open-input-string "#; ; abc\n def ghi")))
+(test '(abs -16) (read (open-input-string "(#;sqrt abs -16)")))
+(test '(a d) (read (open-input-string "(a #; #;b c d)")))
+(test '(a e) (read (open-input-string "(a #;(b #;c d) e)")))
+(test '(a . c) (read (open-input-string "(a . #;b c)")))
+
+;X[racket]
 ;X (import (only (racket base) version)
 ;X         (only (version utils) version<?))
 ;X
@@ -2086,54 +2079,55 @@
 ;X ; this functionality just degrade on older Racket versions.
 ;X (unless (version<? (version) "6.3.0.4")
 ;X   (test '(a . b) (read (open-input-string "(a . b #;c)"))))
+
+;X[test-assert]
+;X(define (test-read-error str)
+;X  (test-assert str
+;X      (guard (exn (else #t))
+;X        (read (open-input-string str))
+;X        #f)))
 ;X
-;X (define (test-read-error str)
-;X   (test-assert str
-;X       (guard (exn (else #t))
-;X         (read (open-input-string str))
-;X         #f)))
-;X
-;X (test-read-error "(#;a . b)")
-;X (test-read-error "(a . #;b)")
-;X (test-read-error "(a #;. b)")
-;X (test-read-error "(#;x #;y . z)")
-;X (test-read-error "(#; #;x #;y . z)")
-;X (test-read-error "(#; #;x . z)")
-;X
-;X (test #\a (read (open-input-string "#\\a")))
-;X (test #\space (read (open-input-string "#\\space")))
-;X (test 0 (char->integer (read (open-input-string "#\\null"))))
-;X (test 7 (char->integer (read (open-input-string "#\\alarm"))))
-;X (test 8 (char->integer (read (open-input-string "#\\backspace"))))
-;X (test 9 (char->integer (read (open-input-string "#\\tab"))))
-;X (test 10 (char->integer (read (open-input-string "#\\newline"))))
-;X (test 13 (char->integer (read (open-input-string "#\\return"))))
-;X (test #x7F (char->integer (read (open-input-string "#\\delete"))))
-;X (test #x1B (char->integer (read (open-input-string "#\\escape"))))
-;X (test #x03BB (char->integer (read (open-input-string "#\\λ"))))
-;X (test #x03BB (char->integer (read (open-input-string "#\\x03BB"))))
-;X
-;X (test "abc" (read (open-input-string "\"abc\"")))
-;X (test "abc" (read (open-input-string "\"abc\" \"def\"")))
-;X (test "ABC" (read (open-input-string "\"ABC\"")))
-;X (test "Hello" (read (open-input-string "\"H\\x65;llo\"")))
-;X (test 7 (char->integer (string-ref (read (open-input-string "\"\\a\"")) 0)))
-;X (test 8 (char->integer (string-ref (read (open-input-string "\"\\b\"")) 0)))
-;X (test 9 (char->integer (string-ref (read (open-input-string "\"\\t\"")) 0)))
-;X (test 10 (char->integer (string-ref (read (open-input-string "\"\\n\"")) 0)))
-;X (test 13 (char->integer (string-ref (read (open-input-string "\"\\r\"")) 0)))
-;X (test #x22 (char->integer (string-ref (read (open-input-string "\"\\\"\"")) 0)))
-;X (test #x7C (char->integer (string-ref (read (open-input-string "\"\\|\"")) 0)))
-;X (test "line 1\nline 2\n" (read (open-input-string "\"line 1\nline 2\n\"")))
-;X (test "line 1continued\n" (read (open-input-string "\"line 1\\\ncontinued\n\"")))
-;X (test "line 1continued\n" (read (open-input-string "\"line 1\\ \ncontinued\n\"")))
-;X (test "line 1continued\n" (read (open-input-string "\"line 1\\\n continued\n\"")))
-;X (test "line 1continued\n" (read (open-input-string "\"line 1\\ \t \n \t continued\n\"")))
-;X (test "line 1\n\nline 3\n" (read (open-input-string "\"line 1\\ \t \n \t \n\nline 3\n\"")))
-;X (test #x03BB (char->integer (string-ref (read (open-input-string "\"\\x03BB;\"")) 0)))
-;X
-;X (test-end)
-;X
+;X(test-read-error "(#;a . b)")
+;X(test-read-error "(a . #;b)")
+;X(test-read-error "(a #;. b)")
+;X(test-read-error "(#;x #;y . z)")
+;X(test-read-error "(#; #;x #;y . z)")
+;X(test-read-error "(#; #;x . z)")
+
+(test #\a (read (open-input-string "#\\a")))
+(test #\space (read (open-input-string "#\\space")))
+(test 0 (char->integer (read (open-input-string "#\\null"))))
+(test 7 (char->integer (read (open-input-string "#\\alarm"))))
+(test 8 (char->integer (read (open-input-string "#\\backspace"))))
+(test 9 (char->integer (read (open-input-string "#\\tab"))))
+(test 10 (char->integer (read (open-input-string "#\\newline"))))
+(test 13 (char->integer (read (open-input-string "#\\return"))))
+(test #x7F (char->integer (read (open-input-string "#\\delete"))))
+(test #x1B (char->integer (read (open-input-string "#\\escape"))))
+(test #x03BB (char->integer (read (open-input-string "#\\λ"))))
+(test #x03BB (char->integer (read (open-input-string "#\\x03BB"))))
+
+(test "abc" (read (open-input-string "\"abc\"")))
+(test "abc" (read (open-input-string "\"abc\" \"def\"")))
+(test "ABC" (read (open-input-string "\"ABC\"")))
+(test "Hello" (read (open-input-string "\"H\\x65;llo\"")))
+(test 7 (char->integer (string-ref (read (open-input-string "\"\\a\"")) 0)))
+(test 8 (char->integer (string-ref (read (open-input-string "\"\\b\"")) 0)))
+(test 9 (char->integer (string-ref (read (open-input-string "\"\\t\"")) 0)))
+(test 10 (char->integer (string-ref (read (open-input-string "\"\\n\"")) 0)))
+(test 13 (char->integer (string-ref (read (open-input-string "\"\\r\"")) 0)))
+(test #x22 (char->integer (string-ref (read (open-input-string "\"\\\"\"")) 0)))
+(test #x7C (char->integer (string-ref (read (open-input-string "\"\\|\"")) 0)))
+(test "line 1\nline 2\n" (read (open-input-string "\"line 1\nline 2\n\"")))
+(test "line 1continued\n" (read (open-input-string "\"line 1\\\ncontinued\n\"")))
+(test "line 1continued\n" (read (open-input-string "\"line 1\\ \ncontinued\n\"")))
+(test "line 1continued\n" (read (open-input-string "\"line 1\\\n continued\n\"")))
+(test "line 1continued\n" (read (open-input-string "\"line 1\\ \t \n \t continued\n\"")))
+(test "line 1\n\nline 3\n" (read (open-input-string "\"line 1\\ \t \n \t \n\nline 3\n\"")))
+(test #x03BB (char->integer (string-ref (read (open-input-string "\"\\x03BB;\"")) 0)))
+
+(test-end)
+
 ;X (test-begin "Numeric syntax")
 ;X
 ;X ;; Numeric syntax adapted from Peter Bex's tests.
@@ -2144,42 +2138,44 @@
 ;X ;; tests are run by default - need to cond-expand and test for
 ;X ;; infinities and -0.0.
 ;X
-;X (define-syntax test-numeric-syntax
-;X   (syntax-rules ()
-;X     ((test-numeric-syntax str expect strs ...)
-;X      (let* ((z (read (open-input-string str)))
-;X             (out (open-output-string))
-;X             (z-str (begin (write z out) (get-output-string out))))
-;X        (test expect (values z))
-;X        (test #t (and (member z-str '(str strs ...)) #t))))))
-;X
-;X ;; Each test is of the form:
-;X ;;
-;X ;;   (test-numeric-syntax input-str expected-value expected-write-values ...)
-;X ;;
-;X ;; where the input should be eqv? to the expected-value, and the
-;X ;; written output the same as any of the expected-write-values.  The
-;X ;; form
-;X ;;
-;X ;;   (test-numeric-syntax input-str expected-value)
-;X ;;
-;X ;; is a shorthand for
-;X ;;
-;X ;;   (test-numeric-syntax input-str expected-value (input-str))
-;X
-;X ;; Simple
-;X (test-numeric-syntax "1" 1)
-;X (test-numeric-syntax "+1" 1 "1")
-;X (test-numeric-syntax "-1" -1)
+(define-syntax test-numeric-syntax
+  (syntax-rules ()
+    ((test-numeric-syntax str expect strs ...)
+     (let* ((z (read (open-input-string str)))
+            (out (open-output-string))
+            (z-str (begin (write z out) (get-output-string out))))
+       (test expect (values z))
+       (test #t (and (member z-str '(str strs ...)) #t))))))
+
+;; Each test is of the form:
+;;
+;;   (test-numeric-syntax input-str expected-value expected-write-values ...)
+;;
+;; where the input should be eqv? to the expected-value, and the
+;; written output the same as any of the expected-write-values.  The
+;; form
+;;
+;;   (test-numeric-syntax input-str expected-value)
+;;
+;; is a shorthand for
+;;
+;;   (test-numeric-syntax input-str expected-value (input-str))
+
+;; Simple
+(test-numeric-syntax "1" 1)
+(test-numeric-syntax "+1" 1 "1")
+(test-numeric-syntax "-1" -1)
+;X [complex/fraction]
 ;X (test-numeric-syntax "#i1" 1.0 "1.0" "1.")
 ;X (test-numeric-syntax "#I1" 1.0 "1.0" "1.")
 ;X (test-numeric-syntax "#i-1" -1.0 "-1.0" "-1.")
-;X ;; Decimal
+;; Decimal
+;X [decimals/-0 not kept]
 ;X (test-numeric-syntax "1.0" 1.0 "1.0" "1.")
 ;X (test-numeric-syntax "1." 1.0 "1.0" "1.")
 ;X (test-numeric-syntax ".1" 0.1 "0.1" "100.0e-3")
 ;X (test-numeric-syntax "-.1" -0.1 "-0.1" "-100.0e-3")
-;X ;; Some Schemes don't allow negative zero. This is okay with the standard
+;; Some Schemes don't allow negative zero. This is okay with the standard
 ;X (test-numeric-syntax "-.0" -0.0 "-0." "-0.0" "0.0" "0." ".0")
 ;X (test-numeric-syntax "-0." -0.0 "-.0" "-0.0" "0.0" "0." ".0")
 ;X (test-numeric-syntax "#i1.0" 1.0 "1.0" "1.")
@@ -2197,12 +2193,13 @@
 ;X (test-numeric-syntax "1D2" 100.0 "100.0" "100.")
 ;X (test-numeric-syntax "1l2" 100.0 "100.0" "100.")
 ;X (test-numeric-syntax "1L2" 100.0 "100.0" "100.")
-;X ;; NaN, Inf
-;X (test-numeric-syntax "+nan.0" +nan.0 "+nan.0" "+NaN.0")
-;X (test-numeric-syntax "+NAN.0" +nan.0 "+nan.0" "+NaN.0")
-;X (test-numeric-syntax "+inf.0" +inf.0 "+inf.0" "+Inf.0")
-;X (test-numeric-syntax "+InF.0" +inf.0 "+inf.0" "+Inf.0")
-;X (test-numeric-syntax "-inf.0" -inf.0 "-inf.0" "-Inf.0")
+;; NaN, Inf
+(test-numeric-syntax "+nan.0" +nan.0 "+nan.0" "+NaN.0")
+(test-numeric-syntax "+NAN.0" +nan.0 "+nan.0" "+NaN.0")
+(test-numeric-syntax "+inf.0" +inf.0 "+inf.0" "+Inf.0")
+(test-numeric-syntax "+InF.0" +inf.0 "+inf.0" "+Inf.0")
+(test-numeric-syntax "-inf.0" -inf.0 "-inf.0" "-Inf.0")
+;X [complex/fraction]
 ;X (test-numeric-syntax "-iNF.0" -inf.0 "-inf.0" "-Inf.0")
 ;X (test-numeric-syntax "#i+nan.0" +nan.0 "+nan.0" "+NaN.0")
 ;X (test-numeric-syntax "#i+inf.0" +inf.0 "+inf.0" "+Inf.0")
@@ -2250,24 +2247,25 @@
 ;X ;; Complex numbers (polar notation)
 ;X ;; Need to account for imprecision in write output.
 ;X ;;(test-numeric-syntax "1@2" -0.416146836547142+0.909297426825682i "-0.416146836547142+0.909297426825682i")
-;X ;; Base prefixes
-;X (test-numeric-syntax "#x11" 17 "17")
-;X (test-numeric-syntax "#X11" 17 "17")
-;X (test-numeric-syntax "#d11" 11 "11")
-;X (test-numeric-syntax "#D11" 11 "11")
-;X (test-numeric-syntax "#o11" 9 "9")
-;X (test-numeric-syntax "#O11" 9 "9")
-;X (test-numeric-syntax "#b11" 3 "3")
-;X (test-numeric-syntax "#B11" 3 "3")
-;X (test-numeric-syntax "#o7" 7 "7")
-;X (test-numeric-syntax "#xa" 10 "10")
-;X (test-numeric-syntax "#xA" 10 "10")
-;X (test-numeric-syntax "#xf" 15 "15")
-;X (test-numeric-syntax "#x-10" -16 "-16")
-;X (test-numeric-syntax "#d-10" -10 "-10")
-;X (test-numeric-syntax "#o-10" -8 "-8")
-;X (test-numeric-syntax "#b-10" -2 "-2")
-;X ;; Combination of prefixes
+;; Base prefixes
+(test-numeric-syntax "#x11" 17 "17")
+(test-numeric-syntax "#X11" 17 "17")
+(test-numeric-syntax "#d11" 11 "11")
+(test-numeric-syntax "#D11" 11 "11")
+(test-numeric-syntax "#o11" 9 "9")
+(test-numeric-syntax "#O11" 9 "9")
+(test-numeric-syntax "#b11" 3 "3")
+(test-numeric-syntax "#B11" 3 "3")
+(test-numeric-syntax "#o7" 7 "7")
+(test-numeric-syntax "#xa" 10 "10")
+(test-numeric-syntax "#xA" 10 "10")
+(test-numeric-syntax "#xf" 15 "15")
+(test-numeric-syntax "#x-10" -16 "-16")
+(test-numeric-syntax "#d-10" -10 "-10")
+(test-numeric-syntax "#o-10" -8 "-8")
+(test-numeric-syntax "#b-10" -2 "-2")
+;; Combination of prefixes
+;X[exact/inexact/non-digital decimals/complex]
 ;X (test-numeric-syntax "#e#x10" 16 "16")
 ;X (test-numeric-syntax "#i#x10" 16.0 "16.0" "16.")
 ;X ;; (Attempted) decimal notation with base prefixes

@@ -10,6 +10,7 @@ const TokenRe = new RegExp("(?:"+[
   /;[^\n]*(?:\n|$)/.source, // comment (end of line)
   /(?:[A-Za-z0-9]|[^\x00-\x7f]|[!$%&*+\-./:<=>?@^_~])+/.source, // Bare identifier or bare number or dot
   /\|(?:[^|\\]|\n|\\(?:.|\n))+\|/.source, // Quoted identifier (multi-line)
+  /#!(?:[A-Za-z0-9]|[^\x00-\x7f]|[!$%&*+\-./:<=>?@^_~])+/.source, // directive
   /"(?:[^"\\]|\n|\\(?:.|\n))*"/.source, // String (multi-line)
   /(?:[()[\]{}'`]|,(?!@)|,@)/.source, // Curly, bracket, brace, quote, unquote
   /#(?:t(?:rue)?|f(?:alse)?|\(|u8\(|\d+[#=]|;)/.source, // datum label & datum comment & vector & byte-vector & boolean
@@ -92,6 +93,7 @@ export const fromStringToTokens = (
     }
     if (token === "#!fold-case" || token === "#!no-fold-case") {
       foldcase = !token.includes("#!no-");
+      continue;
     }
     if (foldcase && (
       token.match(/^(?:[A-Za-z0-9]|[^\x00-\x7f]|[!$%&*+\-./:<=>?@^_~])+$/) ||
@@ -166,7 +168,7 @@ export const fromTokenTreeToObject = (
       return create.Number(matches[0].toLowerCase());
     } else if ((matches = /^(?:#d)?[-+]?\d+(?:\.\d*)?(?:e[-+]?\d+)?$/i.exec(node))) {
       // Digital number literal. Note: We must eliminate the first 0.
-      return JSNumberToNumber(Number(node.replace(/^(#d)?0*/, "")));
+      return JSNumberToNumber(Number(node.replace(/^(#d)?0*/i, "")));
     } else if ((matches = /^(?:#b[-+]?[01]+|#o[-+]?[0-7]+|#x[-+]?[0-9A-Fa-f]+)/i.exec(node))) {
       // Binary / octal / hexadecimal literal. Note: Number() doesn't accept +/- sign.
       return JSNumberToNumber(Number(node.replace(/^#([xob])([+-]?)/i, "0$1")) * (node.includes("-") ? -1 : 1));
@@ -181,9 +183,9 @@ export const fromTokenTreeToObject = (
     } else if ((matches = /^"((?:.|\n)*)"$/.exec(node))) {
       // String literal
       const str = matches[1]
-        .replace(/\\(x[0-9a-fA-F]+|\s*\n\s*|[^x\s\n])/g, s => {
+        .replace(/\\(x[0-9a-fA-F]+;|[ \t]*\n[ \t]*|[^x \t\n])/g, s => {
           if (s[1] === "x") {
-            return String.fromCodePoint(Number(`0x${s.slice(2)}`));
+            return String.fromCodePoint(Number(`0x${s.replace(/;$/,"").slice(2)}`));
           } else if (/\s|\n/.test(s[1])) {
             return "";
           } else {
@@ -211,9 +213,9 @@ export const fromTokenTreeToObject = (
     } else if (node !== "." && (matches = /^\|(([^\\]|\n|\\(.|\n))+)\|$/.exec(node))) {
       // Quoted symbols.
       const str = matches[1]
-        .replace(/\\(x[0-9a-fA-F]+|\s*\n\s*|[^x\s\n])/g, s => {
+        .replace(/\\(x[0-9a-fA-F]+;|\s*\n\s*|[^x\s\n])/g, s => {
           if (s[1] === "x") {
-            return String.fromCodePoint(Number(`0x${s.slice(2)}`));
+            return String.fromCodePoint(Number(`0x${s.replace(/;$/,"").slice(2)}`));
           } else if (/\s|\n/.test(s[1])) {
             return "";
           } else {

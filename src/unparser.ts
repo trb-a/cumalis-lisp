@@ -30,8 +30,9 @@ const StringEscapeSpecials: Record<string, string> = {
 };
 
 export type UnparserOptions = {
-  extended?: boolean,
-  shared?: boolean, // Only when extended = true. default = false
+  extended?: boolean, // default is false.
+  labels?: "simple" | "cyclic" | "shared", // See R7RS 6.13.3. default="cyclic".
+  style?: "write" | "display",  // See R7RS 6.13.3. default="write".
   maxdepth?: number, // Only when extended = true. default = Infinity
 };
 
@@ -43,27 +44,21 @@ export type UnparserOptions = {
 // - No space after opening parentheses. (including vector and bytevector)
 // - No space before closing parentheses.
 // - No space after quotatings.
+// When style="display", <character> and <string> are quoted like ""..."".
 export const fromTokensToString = (tokens: LISP.Token[]): string => {
-  // return tokens.reduce<string>((prev, curr) => {
-  //   if (
-  //     prev === "" || prev.endsWith("(") || curr.startsWith(")") ||
-  //     Object.values(Quotings).some(q => prev.endsWith(q))
-  //   ) {
-  //     return prev + curr;
-  //   } else {
-  //     return prev + " " + curr;
-  //   }
-  // }, "");
-  const ret = tokens.reduce<string>((prev, curr) => {
-    if (
-      prev === "" || prev.endsWith("(") || curr.startsWith(")") ||
-      Object.values(Quotings).some(q => prev.endsWith(q))
-    ) {
-      return prev + curr;
-    } else {
-      return prev + " " + curr;
-    }
-  }, "");
+  let ret = "";
+  let prev = "";
+  for (const curr of tokens) {
+    const str = (curr.length > 2 && curr.indexOf('""') === 0) // This is for style = "display"
+      ? curr.replace(/^""/, "").replace(/""$/, "")
+      : curr;
+    const space = (
+      ret === "" || prev.slice(0, 1) === "(" || curr.slice(-1) === ")" ||
+      Object.values(Quotings).indexOf(prev) >= 0
+    ) ? "" : " ";
+    ret = ret + space + str;
+    prev = curr;
+  }
   return ret;
 };
 
@@ -108,12 +103,12 @@ export const fromTokenTreesToTokens = (trees: LISP.TokenTree[]): LISP.Token[] =>
 
 // Convert a LISP Object to a token tree or a extended token tree (JS object tree).
 // extended: if true, returns a Javascript object tree.
-// shared: if true, writes token labels for every shared objects (only when extended is not true).
+// labels: "simple" | "cyclic" | "shared". default is cyclic. See R7RS 6.13.3.
 export const fromObjectToTokenTree = <T extends UnparserOptions = { extended: false }>(
   obj: LISP.Object,
   options?: T,
 ): T extends { extended: true } ? LISP.ExtendedTokenTree : LISP.TokenTree => {
-  const { extended = false, shared = false, maxdepth = Infinity } = options ?? {};
+  const { extended = false, style = "write", labels = "cyclic", maxdepth = Infinity } = options ?? {};
 
   // Study the tree to find objects to label.
   const foundObjects = new Set<LISP.Object>();
@@ -127,7 +122,7 @@ export const fromObjectToTokenTree = <T extends UnparserOptions = { extended: fa
       }
     }
     if (!extended) {
-      if (ancestors.has(obj) || (shared && foundObjects.has(obj))) {
+      if ((labels === "cyclic" && ancestors.has(obj)) || (labels === "shared" && foundObjects.has(obj))) {
         labelObjects.add(obj);
         return;
       }
@@ -185,10 +180,14 @@ export const fromObjectToTokenTree = <T extends UnparserOptions = { extended: fa
         }
       case "<string>":
         if (!extended) {
-          return '"' + obj[1].replace(
-            /[\x00-\x1f\x7f]"|\\/g,
-            c => StringEscapeSpecials[c] ?? `\\x${c.codePointAt(0)?.toString(16)}`
-          ) + '"';
+          if (style !== "display") {
+            return '"' + obj[1].replace(
+              /[\x00-\x1f\x7f]"|\\/g,
+              c => StringEscapeSpecials[c] ?? `\\x${c.codePointAt(0)?.toString(16)}`
+            ) + '"';
+          } else {
+            return '""' + obj[1] + '""';
+          }
         } else {
           return obj[1];
         }
@@ -206,8 +205,12 @@ export const fromObjectToTokenTree = <T extends UnparserOptions = { extended: fa
         }
       case "<character>":
         if (!extended) {
-          const [special] = Object.entries(SpecialCharacters).find(([, char]) => char === obj[1]) ?? [];
-          return `#\\${special ?? obj[1]}`;
+          if (style !== "display") {
+            const [special] = Object.entries(SpecialCharacters).find(([, char]) => char === obj[1]) ?? [];
+            return `#\\${special ?? obj[1]}`;
+          } else {
+            return '""' + obj[1] + '""';
+          }
         } else {
           return obj[1];
         }
