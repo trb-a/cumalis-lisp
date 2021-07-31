@@ -1,5 +1,6 @@
 import { LISP } from "./types";
 export declare const procedures: {
+    Import: import("./interpreter").BuiltInProcedureDefinition<"sets", ({ sets }: Partial<Record<"sets", LISP.Object | LISP.Object[] | null>>, itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => LISP.Object>;
     define: import("./interpreter").BuiltInProcedureDefinition<"arg1" | "arg2", ({ arg1, arg2 }: Partial<Record<"arg1" | "arg2", LISP.Object | LISP.Object[] | null>>, itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => LISP.Object>;
     defineValues: import("./interpreter").BuiltInProcedureDefinition<"expr" | "formals", ({ formals, expr }: Partial<Record<"expr" | "formals", LISP.Object | LISP.Object[] | null>>, itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => LISP.Object>;
     defineSyntax: import("./interpreter").BuiltInProcedureDefinition<"keyword" | "spec", ({ keyword, spec }: Partial<Record<"keyword" | "spec", LISP.Object | LISP.Object[] | null>>, itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => LISP.Object>;

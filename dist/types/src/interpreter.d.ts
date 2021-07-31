@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { name as PACKAGE_NAME, version as PACKAGE_VERSION } from "../package.json";
-import { LISP } from "./types";
+import { Dictionary, LISP } from "./types";
 import type NodeFS_NS from "fs";
 export { PACKAGE_NAME, PACKAGE_VERSION };
 export declare const DEFAULT_CALL_STACK_SIZE = 16384;
@@ -33,6 +33,7 @@ export declare type BuiltInPortDefinition = {
     flush?(): void;
     binary?(): boolean;
 };
+export declare type BuiltInLibraryDefinition = (itrp: Interpreter) => Dictionary<LISP.Object>;
 export declare type Envelope = {
     language: string;
     version: string;
@@ -47,6 +48,7 @@ export declare class Interpreter {
     setBuiltInProcedure(definition: BuiltInProcedureDefinition, overwrite?: boolean): LISP.Procedure;
     setBuiltInJSObject(name: string, value: any, overwrite?: boolean): LISP.JS;
     setBuiltInPort(name: string, value: BuiltInPortDefinition, overwrite?: boolean): LISP.Port;
+    setBuiltInLibrary(name: string, value: BuiltInLibraryDefinition, overwrite?: boolean): LISP.Symbol;
     getProcedureContent(proc: LISP.Procedure): ({
         parameters: LISP.ProcedureParameter[];
         body: LISP.Object;
@@ -70,6 +72,7 @@ export declare class Interpreter {
     } | null);
     getJSObjectContent(obj: LISP.JS): any | null;
     getBuiltInPort(name: string): BuiltInPortDefinition | null;
+    getBuiltInLibrary(name: string): BuiltInLibraryDefinition | null;
     defineStatic(ns: LISP.StaticNS, name: LISP.Symbol, value: LISP.Object): string;
     defineDynamic(ns: LISP.DynamicNS, name: string, value: LISP.Object): string;
     setStatic(ns: LISP.StaticNS, name: LISP.Symbol, value: LISP.Object): LISP.Object | null;

@@ -1,7 +1,8 @@
 import { LISP } from "./types";
 export declare type UnparserOptions = {
     extended?: boolean;
-    shared?: boolean;
+    labels?: "simple" | "cyclic" | "shared";
+    style?: "write" | "display";
     maxdepth?: number;
 };
 export declare const fromTokensToString: (tokens: LISP.Token[]) => string;
