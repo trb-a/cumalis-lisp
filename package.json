@@ -1,6 +1,6 @@
 {
   "name": "cumalis-lisp",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "A Scheme implementation written in Typescript.",
   "keywords": [
     "SCHEME",
