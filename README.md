@@ -39,7 +39,7 @@ $ npm install cumalis-lisp
 - All objects, AST, and call-frames consist of pure JSON objects.
   * Continuations can be serialized to JSON strings. (Circular references need to be resolved.)
   * Comes with simple JSON serializer/deserializer as a utility. (toReferentialJSON / fromReferentialJSON)
-- No depencency.
+- No dependency.
 
 With these features, The following application fields can be considered.
 
@@ -55,7 +55,7 @@ With these features, The following application fields can be considered.
 
 ## How to use as a module
 
-### Basic useage
+### Basic usage
 
 ```typescript
 import { Interpreter, toJS } from "cumalis-lisp";
@@ -156,7 +156,7 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
     * Complex / fraction number is not implemented.
     * 1.0 and 1 is same value. (like Javascript's number primitive).
     * "exact" means Number.isSafeInteger is true in Javascript.
-    * In S-expressions, hexadecial, octal, binary literals can't have digits.
+    * In S-expressions, hexadecimal, octal, binary literals can't have digits.
   - Limited syntax-rules support.
     * Only lists are supported for now. No vector rules.
     * Only flat patterns are supported. No nested patterns.
@@ -170,7 +170,7 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
 
 ## TODO
 
-  - Better documentation (espacially Javascript interfaces more).
+  - Better documentation (especially Javascript interfaces more).
   - REPL for Node.js.
   - Expose all items in create, forms, part of functions and LISP that can be called directly for usability.
   - Review the parameter names of functions. (to match R7RS)
