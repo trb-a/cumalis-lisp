@@ -149,7 +149,7 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
     * (scheme r5rs)
   - Limited support for importing / exporting libraries.
     * "(scheme base)" is imported by default. Importing "(scheme base)" is just ignored.
-    * "define-libary" "cond-expand" is not implemented. (But defining your own "built-in" library is supported.)
+    * "define-library" "cond-expand" is not implemented. (But defining your own "built-in" library is supported.)
     * "import" can only import built-in libraries at the top-level.
     * Importing with "only" "except" "prefix" "rename" is not supported.
   - About number, only integer and real number is supported.
@@ -164,9 +164,9 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
   - (eqv? "aaa" "aaa") returns #t. (like Javascript's "aaa" === "aaa" returns true).
   - #!fold-case does downcase. (by Javascript's String.toLowerCase).
   - Strings doesn't handle surrogate pairs correctly. (Works like Javascript string).
-  - "exact-integer-sqrt is very slow, can calculate exact integer & positive value.
+  - "exact-integer-sqrt" is very slow, can calculate exact integer & positive value.
   - toReferentialJSON / fromReferentialJSON can't serialize Javascript's class instances
-    except simple (not extended) "Object" or "Array" instance.
+    except simple (not extended) "Object" or "Array" instances.
 
 ## TODO
 
