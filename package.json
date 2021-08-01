@@ -35,8 +35,9 @@
     "release": "yarn standard-version",
     "postrelease": "git push --follow-tags",
     "pretest": "yarn lint",
-    "test": "jest",
+    "test": "jest --testPathIgnorePatterns='run.*'",
     "test:cov": "yarn test -- --coverage",
+    "test:run": "babel-node -x .ts __tests__/run.ts",
     "types:check": "tsc --noEmit",
     "start": "yarn serve docs"
   },

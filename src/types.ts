@@ -48,7 +48,7 @@ export declare namespace LISP {
   // <undefined> is value to be set when the value is not defined or returning void value.
   // Setting an undefined value to variables, vectors, or records will occur erros.
   type IUndefined = [className: "<undefined>"];
-  type IPromise = [className: "<promise>", stack: CallStack, expr: Object];
+  type IPromise = [className: "<promise>", thunk: Procedure | null, value: Object | null];
   type IError = [className: "<error>", name: string, message: string | null, irritants: Object[]];
   type IContinuation = [className: "<continuation>", stack: CallStack];
   // Only "flat", "non-vector", "proper list" patterns are supported for now.
@@ -96,7 +96,7 @@ export declare namespace LISP {
   // Note: Never contain directly in AST.
   type SpecialObject = Suspend | JSPromiseContinuation | CallStack | Stack<any, any>;
   type Suspend = [type: "#SUSPEND#", continuation: Continuation, value: Object];
-  type JSPromiseContinuation = [type: "#PROMISE-CONTINUATION#", continuation: Continuation, jsPromise: | JSPromise<any> | PromiseLike<any>, status: "pending" | "fulfilled" | "rejected"];
+  type JSPromiseContinuation = [type: "#JS-PROMISE-CONTINUATION#", continuation: Continuation, jsPromise: | JSPromise<any> | PromiseLike<any>, status: "pending" | "fulfilled" | "rejected"];
 
   // Tokenizing, Parsing, AST
   type Token = string;

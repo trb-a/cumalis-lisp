@@ -1,6 +1,6 @@
 /* eslint-disable jest/no-conditional-expect */
 import fs from "fs";
-import { assert, contentCS, create, defineBuiltInProcedure, forms, fromReferentialJSON, is, isSuspendEnvelope, SuspendEnvelope, suspendValueFromEnvelope, toReferentialJSON } from "../src/utils";
+import { assert, contentCS, create, defineBuiltInProcedure, forms, fromReferentialJSON, is, isSuspendEnvelope, numberToJSNumber, SuspendEnvelope, suspendValueFromEnvelope, toReferentialJSON } from "../src/utils";
 import { equalQ } from "../src/equivalence";
 import { toJS, writeObject } from "../src/unparser";
 import { Interpreter } from "../src/interpreter";
@@ -77,7 +77,43 @@ const testValues1Proc = defineBuiltInProcedure("test-values-1", [
   if (JSON.stringify(tobe) === JSON.stringify(target)) {
     logger.log("OK!");
   } else {
+    failCount++;
     logger.log("******** <<<< [[ NG! ]] >>>> **********");
+  }
+  return ["<undefined>"];
+});
+
+const testRoundProc = defineBuiltInProcedure("test-round", [
+  {name: "tobe", evaluate: false},
+  {name: "target", evaluate: false},
+], ({tobe, target}, _itrp, stack) => {
+  assert.Object(tobe);
+  assert.Object(target);
+  const info = contentCS(stack).info;
+  logger.log(
+    writeObject(target) + " =(round)= " + writeObject(tobe) + "\n" +
+    JSON.stringify(info)
+  );
+  return forms.CallBuiltIn("test-round-1", tobe, target);
+}, true);
+
+// Note: Only for this test.
+const testRound1Proc = defineBuiltInProcedure("test-round-1", [
+  {name: "tobe"},
+  {name: "target"},
+], ({tobe, target}) => {
+  assert.Object(tobe);
+  assert.Object(target);
+  if (is.Number(tobe) && is.Number(target)) {
+    if (Math.round(numberToJSNumber(tobe) * 1000) === Math.round(numberToJSNumber(target) * 1000)) {
+      logger.log("OK!");
+    } else {
+      failCount++;
+      logger.log("******** <<<< [[ NG! ]] >>>> **********" + "\nReturned value:" + writeObject(target));
+    }
+  } else {
+    failCount++;
+    logger.log("******** <<<< [[ NG! (Not number) ]] >>>> **********");
   }
   return ["<undefined>"];
 });
@@ -102,6 +138,8 @@ itrp.setBuiltInProcedure(testProc);
 itrp.setBuiltInProcedure(test1Proc);
 itrp.setBuiltInProcedure(testValuesProc);
 itrp.setBuiltInProcedure(testValues1Proc);
+itrp.setBuiltInProcedure(testRoundProc);
+itrp.setBuiltInProcedure(testRound1Proc);
 itrp.setBuiltInProcedure(testBeginProc);
 itrp.setBuiltInProcedure(testEndProc);
 

@@ -1,5 +1,7 @@
 // Section "6.14. System interface"
-// doesn't have any base library procedures.
+
+import { create, defineBuiltInProcedure } from "./utils";
+import { name as PACKAGE_NAME, version as PACKAGE_VERSION} from "../package.json";
 
 // import { defineBuiltInProcedure  } from "./utils";
 
@@ -31,5 +33,16 @@
 
 // (jiffies-per-second) time library procedure
 
-// export const procedures = {
-// };
+
+const features = defineBuiltInProcedure("features", [
+], () => {
+  return create.List(
+    create.Symbol("r7rs"),
+    create.Symbol(PACKAGE_NAME),
+    create.Symbol(PACKAGE_NAME + "-" + PACKAGE_VERSION),
+  );
+});
+
+export const procedures = {
+  features
+};

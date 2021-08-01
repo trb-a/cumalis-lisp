@@ -50,21 +50,8 @@ const inexactQ = defineBuiltInProcedure("inexact?", [
 
 const exactIntegerQ = defineBuiltInProcedureAlias("exact-integer?", exactQ);
 
-const finiteQ = defineBuiltInProcedure("finite?", [
-  { name: "z" }
-], ({ z }) => {
-  assert.Number(z);
-  const num = numberToJSNumber(z);
-  return create.Boolean(Number.isFinite(num));
-});
-
-const infiniteQ = defineBuiltInProcedure("infinite?", [
-  { name: "z" }
-], ({ z }) => {
-  assert.Number(z);
-  const num = numberToJSNumber(z);
-  return create.Boolean(!Number.isNaN(num) && !Number.isFinite(num));
-});
+// finite?
+// nan?
 
 const eq = defineBuiltInProcedure("=", [
   { name: "z1" },
@@ -526,7 +513,7 @@ const stringToNumber = defineBuiltInProcedure("string->number", [
 
 export const procedures = {
   numberQ, realQ, integerQ,
-  exactQ, inexactQ, exactIntegerQ, finiteQ, infiniteQ, eq, lt, gt, le, ge,
+  exactQ, inexactQ, exactIntegerQ, eq, lt, gt, le, ge,
   nanQ, zeroQ, positiveQ, negativeQ, oddQ, evenQ,  max, min, add, sub, mul, div, abs,
   floorS, floorQuotient, floorRemainder, truncateS, truncateQuotient, truncateRemainder,
   quotient, remainder, modulo, gcd, lcm, // numerator, denominator,

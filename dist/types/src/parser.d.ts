@@ -11,12 +11,13 @@ export declare const SpecialCharacters: {
     readonly tab: "\t";
 };
 export declare type ParserOptions = {
-    removeLineInfo: boolean;
+    removeLineInfo?: boolean;
+    extended?: boolean;
 };
 export declare const fromStringToTokens: (src: string, filename?: string | undefined) => [token: string, info: LISP.SourceInfo][];
 export declare const fromTokensToTokenTrees: (tokens: ReturnType<typeof fromStringToTokens>) => [LISP.TokenTree[], ReturnType<typeof fromStringToTokens>];
 export declare const fromTokenTreeToObject: (node: LISP.ExtendedTokenTree, info?: LISP.SourceInfo | null, options?: ParserOptions | undefined, labels?: Map<string, LISP.Object>) => LISP.Object;
-export declare const fromJS: (node: LISP.ExtendedTokenTree, info?: LISP.SourceInfo | null, options?: ParserOptions | undefined, labels?: Map<string, LISP.Object>) => LISP.Object;
+export declare const fromJS: (node: LISP.ExtendedTokenTree, info?: LISP.SourceInfo | null, options?: Omit<ParserOptions, "extended"> | undefined) => LISP.Object;
 export declare const fromProgramToAST: (src: string, options?: ParserOptions | undefined) => LISP.AST;
 export declare const parser: (src: string, options?: ParserOptions | undefined) => LISP.AST;
 export default parser;

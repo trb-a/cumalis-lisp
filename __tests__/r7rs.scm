@@ -1,16 +1,16 @@
 ;X #!r7rs
 
-;X This test is a copied and modified from rachet-r7rs's test. (by lexi-lambda)
+;X This test is a copied and modified from:
+;X https://github.com/ashinn/chibi-scheme/blob/master/tests/r7rs-tests.scm
 ;X https://github.com/lexi-lambda/racket-r7rs/blob/master/r7rs-test/tests/r7rs/chibi/tests/r7rs-tests.rkt
 
-;X[library is not supported]
-(import (scheme base) (scheme write) (scheme read))
+;X[Only some libraries are implemented.]
+(import (scheme base) (scheme write) (scheme read) (scheme lazy) (scheme time) (scheme inexact))
 ;X (import (scheme base) (scheme char) (scheme lazy)
 ;X         (scheme inexact) (scheme complex) (scheme time)
 ;X         (scheme file) (scheme read) (scheme write)
 ;X         (scheme eval) (scheme process-context) (scheme case-lambda)
 ;X         (scheme r5rs)
-;X         (tests r7rs chibi test)  ; or (srfi 64)
 ;X         )
 
 (test-begin "R7RS")
@@ -154,38 +154,38 @@
 ;; By Jussi Piitulainen <jpiitula@ling.helsinki.fi>
 ;; and John Cowan <cowan@mercury.ccil.org>:
 ;; http://lists.scheme-reports.org/pipermail/scheme-reports/2013-December/003876.html
-;X[exp inexact library]
-;X (define (means ton)
-;X  (letrec*
-;X     ((mean
-;X        (lambda (f g)
-;X          (f (/ (sum g ton) n))))
-;X      (sum
-;X        (lambda (g ton)
-;X          (if (null? ton)
-;X            (+)
-;X            (if (number? ton)
-;X                (g ton)
-;X                (+ (sum g (car ton))
-;X                   (sum g (cdr ton)))))))
-;X      (n (sum (lambda (x) 1) ton)))
-;X    (values (mean values values)
-;X            (mean exp log)
-;X            (mean / /))))
-;X(let*-values (((a b c) (means '(8 5 99 1 22))))
-;X  (test 27 a)
-;X  (test 9.728 b)
-;X  (test 1800/497 c))
+(define (means ton)
+ (letrec*
+    ((mean
+       (lambda (f g)
+         (f (/ (sum g ton) n))))
+     (sum
+       (lambda (g ton)
+         (if (null? ton)
+           (+)
+           (if (number? ton)
+               (g ton)
+               (+ (sum g (car ton))
+                  (sum g (cdr ton)))))))
+     (n (sum (lambda (x) 1) ton)))
+   (values (mean values values)
+           (mean exp log)
+           (mean / /))))
+(let*-values (((a b c) (means '(8 5 99 1 22))))
+  (test 27 a)
+(test-round 9.728 b)
+;X[fraction]
+;X  (test 1800/497 c)
+  )
 
 (let*-values (((root rem) (exact-integer-sqrt 32)))
   (test 35 (* root rem)))
 
-;X[exact-integer-sqrt is too slow now]
+;X[exact-integer-sqrt is limited inplementation]
 ;X(test '(1073741824 0)
 ;X    (let*-values (((root rem) (exact-integer-sqrt (expt 2 60))))
 ;X      (list root rem)))
 ;X
-;X[No use of exact-integer-sqrt]
 ;X(test '(1518500249 3000631951)
 ;X    (let*-values (((root rem) (exact-integer-sqrt (expt 2 61))))
 ;X      (list root rem)))
@@ -244,58 +244,57 @@
                    nonneg
                    (cons (car numbers) neg))))))
 
-;X[promise library]
-;X (test 3 (force (delay (+ 1 2))))
-;X
-;X(test '(3 3)
-;X    (let ((p (delay (+ 1 2))))
-;X      (list (force p) (force p))))
-;X
-;X(define integers
-;X  (letrec ((next
-;X            (lambda (n)
-;X              (delay (cons n (next (+ n 1)))))))
-;X    (next 0)))
-;X(define head
-;X  (lambda (stream) (car (force stream))))
-;X(define tail
-;X  (lambda (stream) (cdr (force stream))))
-;X
-;X(test 2 (head (tail (tail integers))))
-;X
-;X (define (stream-filter p? s)
-;X   (delay-force
-;X    (if (null? (force s))
-;X        (delay '())
-;X        (let ((h (car (force s)))
-;X              (t (cdr (force s))))
-;X          (if (p? h)
-;X              (delay (cons h (stream-filter p? t)))
-;X              (stream-filter p? t))))))
-;X
-;X (test 5 (head (tail (tail (stream-filter odd? integers)))))
-;X
-;X (let ()
-;X   (define x 5)
-;X   (define count 0)
-;X   (define p
-;X     (delay (begin (set! count (+ count 1))
-;X                   (if (> count x)
-;X                       count
-;X                       (force p)))))
-;X   (test 6 (force p))
-;X   (test 6 (begin (set! x 10) (force p))))
-;X
-;X (test #t (promise? (delay (+ 2 2))))
-;X (test #t (promise? (make-promise (+ 2 2))))
-;X (test #t
-;X     (let ((x (delay (+ 2 2))))
-;X       (force x)
-;X       (promise? x)))
-;X (test #t
-;X     (let ((x (make-promise (+ 2 2))))
-;X       (force x)
-;X       (promise? x)))
+(test 3 (force (delay (+ 1 2))))
+
+(test '(3 3)
+    (let ((p (delay (+ 1 2))))
+      (list (force p) (force p))))
+
+(define integers
+  (letrec ((next
+            (lambda (n)
+              (delay (cons n (next (+ n 1)))))))
+    (next 0)))
+(define head
+  (lambda (stream) (car (force stream))))
+(define tail
+  (lambda (stream) (cdr (force stream))))
+
+(test 2 (head (tail (tail integers))))
+
+(define (stream-filter p? s)
+  (delay-force
+    (if (null? (force s))
+        (delay '())
+        (let ((h (car (force s)))
+              (t (cdr (force s))))
+          (if (p? h)
+              (delay (cons h (stream-filter p? t)))
+              (stream-filter p? t))))))
+
+(test 5 (head (tail (tail (stream-filter odd? integers)))))
+
+(let ()
+  (define x 5)
+  (define count 0)
+  (define p
+    (delay (begin (set! count (+ count 1))
+                  (if (> count x)
+                      count
+                      (force p)))))
+  (test 6 (force p))
+  (test 6 (begin (set! x 10) (force p))))
+
+(test #t (promise? (delay (+ 2 2))))
+(test #t (promise? (make-promise (+ 2 2))))
+(test #t
+    (let ((x (delay (+ 2 2))))
+      (force x)
+      (promise? x)))
+(test #t
+    (let ((x (make-promise (+ 2 2))))
+      (force x)
+      (promise? x)))
 
 (define radix
   (make-parameter
@@ -459,7 +458,6 @@
     ((_ _ _) 2)))
 (test '(2 0 1)
   (list (count-to-2x a b) (count-to-2x) (count-to-2x a)))
-
 
 ;X[syntax-rule with improper list]
 ;X(define-syntax count-to-2_
@@ -831,46 +829,44 @@
 ;X(test 1/3 (rationalize (exact .3) 1/10))
 ;X (test #i1/3 (rationalize .3 1/10))
 
-;X[inexact library]
-;X(test 1.0 (inexact (exp 0))) ;; may return exact number
-;X(test 20.0855369231877 (exp 3))
-;X
-;X(test 0.0 (inexact (log 1))) ;; may return exact number
-;X(test 1.0 (log (exp 1)))
-;X(test 42.0 (log (exp 42)))
-;X(test 2.0 (log 100 10))
-;X(test 12.0 (log 4096 2))
-;X
-;X(test 0.0 (inexact (sin 0))) ;; may return exact number
-;X(test 1.0 (sin 1.5707963267949))
-;X(test 1.0 (inexact (cos 0))) ;; may return exact number
-;X(test -1.0 (cos 3.14159265358979))
-;X(test 0.0 (inexact (tan 0))) ;; may return exact number
-;X(test 1.5574077246549 (tan 1))
-;X
-;X(test 0.0 (inexact (asin 0)))
-;X(test 1.5707963267949 (asin 1))
-;X(test 0.0 (inexact (acos 1)))
-;X(test 3.14159265358979 (acos -1))
-;X
-;X(test 0.0 (atan 0.0 1.0))
-;X(test -0.0 (atan -0.0 1.0))
-;X(test 0.785398163397448 (atan 1.0 1.0))
-;X(test 1.5707963267949 (atan 1.0 0.0))
-;X(test 2.35619449019234 (atan 1.0 -1.0))
-;X(test 3.14159265358979 (atan 0.0 -1.0))
-;X(test -3.14159265358979 (atan -0.0 -1.0)) ;
-;X(test -2.35619449019234 (atan -1.0 -1.0))
-;X(test -1.5707963267949 (atan -1.0 0.0))
-;X(test -0.785398163397448 (atan -1.0 1.0))
+(test 1.0 (inexact (exp 0))) ;; may return exact number
+(test-round 20.0855369231877 (exp 3))
+
+(test 0.0 (inexact (log 1))) ;; may return exact number
+(test 1.0 (log (exp 1)))
+(test 42.0 (log (exp 42)))
+(test 2.0 (log 100 10))
+(test 12.0 (log 4096 2))
+
+(test 0.0 (inexact (sin 0))) ;; may return exact number
+(test-round 1.0 (sin 1.5707963267949))
+(test 1.0 (inexact (cos 0))) ;; may return exact number
+(test -1.0 (cos 3.14159265358979))
+(test 0.0 (inexact (tan 0))) ;; may return exact number
+(test-round 1.5574077246549 (tan 1))
+(test-round 0.0 (inexact (asin 0)))
+(test-round 1.5707963267949 (asin 1))
+(test-round 0.0 (inexact (acos 1)))
+(test-round 3.14159265358979 (acos -1))
+
+(test 0.0 (atan 0.0 1.0))
+(test -0.0 (atan -0.0 1.0))
+(test-round 0.785398163397448 (atan 1.0 1.0))
+(test-round 1.5707963267949 (atan 1.0 0.0))
+(test-round 2.35619449019234 (atan 1.0 -1.0))
+(test-round 3.14159265358979 (atan 0.0 -1.0))
+(test-round -3.14159265358979 (atan -0.0 -1.0)) ;
+(test-round -2.35619449019234 (atan -1.0 -1.0))
+(test-round -1.5707963267949 (atan -1.0 0.0))
+(test-round -0.785398163397448 (atan -1.0 1.0))
 ;; (test undefined (atan 0.0 0.0))
 
 (test 1764 (square 42))
 (test 4 (square 2))
 
-;X[inexact library]
-;X(test 3.0 (inexact (sqrt 9)))
-;X(test 1.4142135623731 (sqrt 2))
+(test-round 3.0 (inexact (sqrt 9)))
+(test-round 1.4142135623731 (sqrt 2))
+;X[complex]
 ;X(test 0.0+1.0i (inexact (sqrt -1)))
 
 (test '(2 0) (call-with-values (lambda () (exact-integer-sqrt 4)) list))
@@ -895,11 +891,11 @@
 ;X
 ;X(test 1.10714871779409 (angle 1+2i))
 
-;X[exact/inexact not supported]
-;X[(test 1.0 (inexact 1))
+(test-round 1.0 (inexact 1))
+;X[inexact]
 ;X[(test #t (inexact? (inexact 1)))
-;X[(test 1 (exact 1.0))
-;X[(test #t (exact? (exact 1.0)))
+(test 1 (exact 1.0))
+(test #t (exact? (exact 1.0)))
 
 (test 100 (string->number "100"))
 (test 256 (string->number "100" 16))
@@ -1355,12 +1351,11 @@
 (test #(a b c) (vector 'a 'b 'c))
 
 (test 8 (vector-ref '#(1 1 2 3 5 8 13 21) 5))
-;#[inexact library]
-;# (test 13 (vector-ref '#(1 1 2 3 5 8 13 21)
-;#             (let ((i (round (* 2 (acos -1)))))
-;#               (if (inexact? i)
-;#                   (exact i)
-;#                   i))))
+(test 13 (vector-ref '#(1 1 2 3 5 8 13 21)
+            (let ((i (round (* 2 (acos -1)))))
+              (if (inexact? i)
+                  (exact i)
+                  i))))
 
 (test #(0 ("Sue" "Sue") "Anna") (let ((vec (vector 0 '(2 2 2 2) "Anna")))
   (vector-set! vec 1 '("Sue" "Sue"))
@@ -1788,8 +1783,7 @@
             ((assq 'c condition) 'caught-c)
             ((assq 'd condition) 'caught-d))
       (list
-;X[inexact library]
-;X       (sqrt 8)
+       (sqrt 8)
        (guard (condition
                ((assq 'a condition) => cdr)
                ((assq 'b condition)))
@@ -2071,15 +2065,6 @@
 (test '(a e) (read (open-input-string "(a #;(b #;c d) e)")))
 (test '(a . c) (read (open-input-string "(a . #;b c)")))
 
-;X[racket]
-;X (import (only (racket base) version)
-;X         (only (version utils) version<?))
-;X
-;X ; This test exposed a bug in Racket, but since these are edge cases, anyway, it seems alright to let
-;X ; this functionality just degrade on older Racket versions.
-;X (unless (version<? (version) "6.3.0.4")
-;X   (test '(a . b) (read (open-input-string "(a . b #;c)"))))
-
 ;X[test-assert]
 ;X(define (test-read-error str)
 ;X  (test-assert str
@@ -2292,11 +2277,11 @@
 
 (test-end)
 
-;X[load/process-context/file/time library]
-;X (test-begin "6.14 System interface")
-;X
-;X ;; 6.14 System interface
-;X
+(test-begin "6.14 System interface")
+
+;; 6.14 System interface
+
+;X[load/process-context/file library]
 ;X ;; (test "/usr/local/bin:/usr/bin:/bin" (get-environment-variable "PATH"))
 ;X
 ;X (test #t (string? (get-environment-variable "PATH")))
@@ -2313,14 +2298,15 @@
 ;X
 ;X (test #t (list? (command-line)))
 ;X
-;X (test #t (real? (current-second)))
-;X (test #t (inexact? (current-second)))
-;X (test #t (exact? (current-jiffy)))
-;X (test #t (exact? (jiffies-per-second)))
-;X
-;X (test #t (list? (features)))
-;X (test #t (and (memq 'r7rs (features)) #t))
-;X
+(test #t (real? (current-second)))
+(test #t (inexact? (current-second)))
+(test #t (exact? (current-jiffy)))
+(test #t (exact? (jiffies-per-second)))
+
+(test #t (list? (features)))
+(test #t (and (memq 'r7rs (features)) #t))
+
+;X[load/process-context/file library]
 ;X ;(test #t (file-exists? "."))
 ;X (test #f (file-exists? " no such file "))
 ;X

@@ -71,7 +71,7 @@ export declare namespace LISP {
     type IMultiValue = [className: "<multi-value>", values: Object[]];
     type IException = [className: "<exception>", stack: CallStack, condition: Object, continuable: boolean];
     type IUndefined = [className: "<undefined>"];
-    type IPromise = [className: "<promise>", stack: CallStack, expr: Object];
+    type IPromise = [className: "<promise>", thunk: Procedure | null, value: Object | null];
     type IError = [className: "<error>", name: string, message: string | null, irritants: Object[]];
     type IContinuation = [className: "<continuation>", stack: CallStack];
     type ISyntaxRulePattern = [className: "<syntax-rule-pattern>", head: Object[], variadic: Object | null, tail: Object[]];
@@ -116,7 +116,7 @@ export declare namespace LISP {
     };
     type SpecialObject = Suspend | JSPromiseContinuation | CallStack | Stack<any, any>;
     type Suspend = [type: "#SUSPEND#", continuation: Continuation, value: Object];
-    type JSPromiseContinuation = [type: "#PROMISE-CONTINUATION#", continuation: Continuation, jsPromise: JSPromise<any> | PromiseLike<any>, status: "pending" | "fulfilled" | "rejected"];
+    type JSPromiseContinuation = [type: "#JS-PROMISE-CONTINUATION#", continuation: Continuation, jsPromise: JSPromise<any> | PromiseLike<any>, status: "pending" | "fulfilled" | "rejected"];
     type Token = string;
     type SourceInfo = Dictionary<string | number>;
     type TokenTree = Token | SourceInfo | TokenTree[];

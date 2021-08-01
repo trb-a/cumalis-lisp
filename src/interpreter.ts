@@ -24,10 +24,14 @@ import { procedures as stringProcedures } from "./string";
 import { procedures as structureProcedures } from "./structure";
 import { procedures as symbolProcedures } from "./symbol";
 import { procedures as vectorProcedures } from "./vector";
+import { procedures as systemProcedures } from "./system";
 import { procedures as miscProcedures } from "./misc";
 
 import WriteLibrary from "./libraries/write";
 import ReadLibrary from "./libraries/read";
+import LazyLibrary from "./libraries/lazy";
+import TimeLibrary from "./libraries/time";
+import InexactLibrary from "./libraries/inexact";
 
 // -------------------------------------------------------
 //                       Consant
@@ -49,12 +53,16 @@ const BuiltInProcedureDefinitions: BuiltInProcedureDefinition[] = [
   ...Object.values(structureProcedures),
   ...Object.values(symbolProcedures),
   ...Object.values(vectorProcedures),
+  ...Object.values(systemProcedures),
   ...Object.values(miscProcedures),
 ];
 
 const BuiltInLibraryDefinitions: Record<string, BuiltInLibraryDefinition> = {
   "(scheme write)": WriteLibrary,
   "(scheme read)": ReadLibrary,
+  "(scheme lazy)": LazyLibrary,
+  "(scheme time)": TimeLibrary,
+  "(scheme inexact)": InexactLibrary,
 };
 
 const BuiltInJSObjects: [string, LISP.Object][] = [
@@ -727,7 +735,7 @@ export class Interpreter {
       } else if (is.JS(e) && e[1] === "built-in" && isPromiseLike(e[2])) {
         // If the exception is Javascript Promise object, wrap it in #<promise-continuation>
         // #<promise-continuation> keeps status of the promise.
-        const pc = create.PromiseContinuation(create.Continuation(cstack), e[2], "pending");
+        const pc = create.JSPromiseContinuation(create.Continuation(cstack), e[2], "pending");
         e[2].then(()=>pc[3] = "fulfilled", ()=>pc[3] = "rejected");
         throw pc;
       } else {

@@ -35,13 +35,13 @@ export declare const create: {
     MultiValue: (values: LISP.Object[]) => LISP.IMultiValue;
     Exception: (stack: LISP.CallStack, condition: LISP.Object, continuable: boolean) => LISP.IException;
     Undefined: () => LISP.IUndefined;
-    Promise: (stack: LISP.CallStack, expr: LISP.Object) => LISP.IPromise;
+    Promise: (thunk: LISP.Procedure | null, value: LISP.Object | null) => LISP.IPromise;
     Error: (name: string, message: string | null, irritants?: LISP.Object[]) => LISP.IError;
     Continuation: (stack: LISP.CallStack) => LISP.IContinuation;
     JS: (...args: ExceptFirst<LISP.IJS>) => LISP.IJS;
     List: (...args: LISP.Object[]) => LISP.List;
     Suspend: (continuation: LISP.IContinuation, value: LISP.Object) => LISP.Suspend;
-    PromiseContinuation: (continuation: LISP.IContinuation, jsPromise: PromiseLike<any> | import("./types").JSPromise<any>, status: "pending" | "fulfilled" | "rejected") => LISP.JSPromiseContinuation;
+    JSPromiseContinuation: (continuation: LISP.IContinuation, jsPromise: PromiseLike<any> | import("./types").JSPromise<any>, status: "pending" | "fulfilled" | "rejected") => LISP.JSPromiseContinuation;
     StaticNS: (args_0: Dictionary<LISP.Object>, args_1: Stack<"#STATIC-NS-STACK#", Dictionary<LISP.Object>> | null) => LISP.Env["static"];
     DynamicNS: (args_0: Dictionary<LISP.Object>, args_1: Stack<"#DYNAMIC-NS-STACK#", Dictionary<LISP.Object>> | null) => LISP.Env["dynamic"];
     HandlerStack: (args_0: LISP.Procedure, args_1: Stack<"#HANDLER-STACK#", LISP.Procedure> | null) => Stack<"#HANDLER-STACK#", LISP.Procedure>;
@@ -120,6 +120,7 @@ export declare const assert: {
     Vector: (v: any, message?: string | undefined) => asserts v is LISP.IVector;
     ByteVector: (v: any, message?: string | undefined) => asserts v is LISP.IByteVector;
     Character: (vs: any, message?: string | undefined) => asserts vs is LISP.ICharacter;
+    Promise: (vs: any, message?: string | undefined) => asserts vs is LISP.IPromise;
     Error: (v: any, message?: string | undefined) => asserts v is LISP.IError;
     Procedure: (v: any, message?: string | undefined) => asserts v is LISP.Procedure;
     SyntaxRules: (v: any, message?: string | undefined) => asserts v is LISP.ISyntaxRules;
@@ -164,11 +165,10 @@ export declare const arrayShallowEquals: (a1: any[], a2: any[]) => boolean;
 export declare const formalsToParameters: (formals: LISP.Object) => [LISP.ProcedureParameter[], LISP.ProcedureParameter | null];
 export declare const isEnvelope: (o: (any)) => o is Envelope;
 export declare const isCurrentVersionEnvelope: (o: (any)) => o is Envelope;
-export declare const isSuspendEnvelope: (o: (any)) => o is Envelope & {
+export declare type SuspendEnvelope = Envelope & {
     content: LISP.Suspend;
 };
-export declare const suspendValueFromEnvelope: (envelope: Envelope & {
-    content: LISP.Suspend;
-}) => LISP.Object;
+export declare const isSuspendEnvelope: (o: (any)) => o is SuspendEnvelope;
+export declare const suspendValueFromEnvelope: (envelope: SuspendEnvelope) => LISP.Object;
 export declare const toReferentialJSON: (tree: (any), referenceTag: string) => string;
 export declare const fromReferentialJSON: (json: string, referenceTag: string) => any;

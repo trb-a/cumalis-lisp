@@ -6,8 +6,6 @@ export declare const procedures: {
     exactQ: import("./interpreter").BuiltInProcedureDefinition<"z", ({ z }: Partial<Record<"z", LISP.Object | LISP.Object[] | null>>) => LISP.IBoolean>;
     inexactQ: import("./interpreter").BuiltInProcedureDefinition<"z", ({ z }: Partial<Record<"z", LISP.Object | LISP.Object[] | null>>) => LISP.IBoolean>;
     exactIntegerQ: import("./interpreter").BuiltInProcedureDefinition<"z", ({ z }: Partial<Record<"z", LISP.Object | LISP.Object[] | null>>) => LISP.IBoolean>;
-    finiteQ: import("./interpreter").BuiltInProcedureDefinition<"z", ({ z }: Partial<Record<"z", LISP.Object | LISP.Object[] | null>>) => LISP.IBoolean>;
-    infiniteQ: import("./interpreter").BuiltInProcedureDefinition<"z", ({ z }: Partial<Record<"z", LISP.Object | LISP.Object[] | null>>) => LISP.IBoolean>;
     eq: import("./interpreter").BuiltInProcedureDefinition<"z1" | "z2" | "zs", ({ z1, z2, zs }: Partial<Record<"z1" | "z2" | "zs", LISP.Object | LISP.Object[] | null>>) => LISP.IBoolean>;
     lt: import("./interpreter").BuiltInProcedureDefinition<"z1" | "z2" | "zs", ({ z1, z2, zs }: Partial<Record<"z1" | "z2" | "zs", LISP.Object | LISP.Object[] | null>>) => LISP.IBoolean>;
     gt: import("./interpreter").BuiltInProcedureDefinition<"z1" | "z2" | "zs", ({ z1, z2, zs }: Partial<Record<"z1" | "z2" | "zs", LISP.Object | LISP.Object[] | null>>) => LISP.IBoolean>;

@@ -156,7 +156,7 @@ export const create = {
   ),
   // Specials
   Suspend: (...args: ExceptFirst<LISP.Suspend>): LISP.Suspend => ["#SUSPEND#", ...args],
-  PromiseContinuation: (...args: ExceptFirst<LISP.JSPromiseContinuation>): LISP.JSPromiseContinuation => ["#PROMISE-CONTINUATION#", ...args],
+  JSPromiseContinuation: (...args: ExceptFirst<LISP.JSPromiseContinuation>): LISP.JSPromiseContinuation => ["#JS-PROMISE-CONTINUATION#", ...args],
   // Namespaces
   StaticNS: (...args: ExceptFirst<LISP.Env["static"]>): LISP.Env["static"] => ["#STATIC-NS-STACK#", ...args],
   DynamicNS: (...args: ExceptFirst<LISP.Env["dynamic"]>): LISP.Env["dynamic"] => ["#DYNAMIC-NS-STACK#", ...args],
@@ -214,7 +214,6 @@ export const is = {
   Vector: (v: unknown): v is LISP.IVector => v instanceof Array && (v[0] === "<vector>"),
   ByteVector: (v: unknown): v is LISP.IByteVector => v instanceof Array && (v[0] === "<bytevector>"),
   EndOfFile: (v: unknown): v is LISP.IEndOfFile => v instanceof Array && (v[0] === "<end-of-file>"),
-  // Procedure: (o: unknown): o is LISP.IProcedure => (o instanceof Array && (o[0] === "<procedure>" ),
   Port: (o: unknown): o is LISP.IPort => (o instanceof Array && (o[0] === "<port>")),
   RecordType: (o: unknown): o is LISP.IRecordType => (o instanceof Array && (o[0] === "<record-type>")),
   Record: (o: unknown): o is LISP.IRecord => (o instanceof Array && (o[0] === "<record>")),
@@ -239,7 +238,7 @@ export const is = {
   Objects: (o: unknown): o is LISP.Object[] => o instanceof Array && o.every(item => is.Object(item)),
   // Specials
   Suspend: (o: unknown): o is LISP.Suspend => (o instanceof Array && o[0] === "#SUSPEND#"),
-  JSPromiseContinuation: (o: unknown): o is LISP.JSPromiseContinuation => (o instanceof Array && o[0] === "#PROMISE-CONTINUATION#"),
+  JSPromiseContinuation: (o: unknown): o is LISP.JSPromiseContinuation => (o instanceof Array && o[0] === "#JS-PROMISE-CONTINUATION#"),
   CallStack: (o: unknown): o is LISP.CallStack => (o instanceof Array && o[0] === "#CALL-STACK#"),
   SpecialObject: (o: unknown): o is LISP.SpecialObject => (o instanceof Array && typeof o[0] === "string" && /^#.+#$/.test(o[0])),
   // Others
@@ -282,6 +281,7 @@ export const assert: {
   Vector: (v: any, message?: string | undefined) => asserts v is LISP.IVector;
   ByteVector: (v: any, message?: string | undefined) => asserts v is LISP.IByteVector;
   Character: (vs: any, message?: string | undefined) => asserts vs is LISP.ICharacter;
+  Promise: (vs: any, message?: string | undefined) => asserts vs is LISP.IPromise;
   Error: (v: any, message?: string | undefined) => asserts v is LISP.IError;
   Procedure: (v: any, message?: string | undefined) => asserts v is LISP.Procedure;
   SyntaxRules: (v: any, message?: string | undefined) => asserts v is LISP.ISyntaxRules;
@@ -318,6 +318,7 @@ export const assert: {
   Vector: makeAsserter(is.Vector, "A <vector> is expected."),
   ByteVector: makeAsserter(is.ByteVector, "A <bytevector> is expected."),
   Character: makeAsserter(is.Character, "A <character> is expected."),
+  Promise: makeAsserter(is.Promise, "A <promise> is expected."),
   Error: makeAsserter(is.Error, "A <error> is expected."),
   Procedure: makeAsserter(is.Procedure, "A <procedure> is expected."),
   SyntaxRules: makeAsserter(is.SyntaxRules, "A <syntax-rules> is expected."),
