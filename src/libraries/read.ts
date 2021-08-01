@@ -49,7 +49,7 @@ const read = defineBuiltInProcedure("read", [
     }
   }
   const [first, ...others] = trees;
-  const datum = fromTokenTreeToObject(first);
+  const datum = fromTokenTreeToObject(first, null, { removeLineInfo: true });
   // Write back as a cache.
   const backTokens = fromTokenTreesToTokens(others);
   const backString = fromTokensToString(backTokens);

@@ -631,14 +631,16 @@ export const isCurrentVersionEnvelope = (
   (is.Object(o.content) || is.SpecialObject(o.content))
 );
 
+export type SuspendEnvelope = Envelope & { content: LISP.Suspend };
+
 export const isSuspendEnvelope = (
   o: (any)
-): o is Envelope & { content: LISP.Suspend } => (
+): o is SuspendEnvelope => (
   isEnvelope(o) && is.Suspend(o.content)
 );
 
 export const suspendValueFromEnvelope = (
-  envelope:  Envelope & { content: LISP.Suspend }
+  envelope:  SuspendEnvelope
 ): LISP.Object => (
   envelope.content[2]
 );

@@ -49,12 +49,80 @@ $ npm install cumalis-lisp
 
 ## How to use as a module
 
+### Basic useage
+
 ```typescript
 import { Interpreter, toJS } from "cumalis-lisp";
 
 const itrp = new Interpreter(); // Create interpreter.
-const ret = itrp.eval(`(+ 1 1)`); // Evaluate S-expression.
+const ret = itrp.eval(`
+  (define (fib n)
+    (if (<= n 2)
+        1
+        (+ (fib (- n 1)) (fib (- n 2)))))
+  (fib 10)
+`); // Evaluate S-expression.
 const num = toJS(ret); // returns 2.
+```
+
+### Defining built-in function / built-in macro
+
+```typescript
+const itrp = new Interpreter(); // Create interpreter.
+const helloProc = defineBuiltInProcedure("hello", [ // Define procedure
+  { name: "obj" }
+], function ({obj}) {
+  if (!is.Object(obj)) {
+    throw new Error("Not a object");
+  }
+  console.log(`Hello ${toJS(obj)}`);
+  return create.Number(42);
+});
+const hello2Proc = defineBuiltInProcedure("hello2", [ // Define macro
+  { name: "obj" }
+], function ({obj}) {
+  if (!is.Object(obj)) {
+    throw new Error("Not a object");
+  }
+  return fromJS(["string-append", `"HELLO "`, obj]); // Write LISP as JS array.
+}, true); // <-- this "true" indicates macro.
+
+itrp.setBuiltInProcedure(helloProc); // Set the procedure to the interpreter.
+itrp.setBuiltInProcedure(helloProc); // Set the procedure to the interpreter.
+
+console.log(toJS(itrp.eval(`(hello "world")`))); // => 42
+console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
+
+```
+
+### Suspend / serialize / deserialize / resume
+
+```Typescript
+  const itrp = new Interpreter(); // Create interpreter.
+
+  // Suspend
+  let suspend: SuspendEnvelope | null = null;
+  try {
+    itrp.eval(`(+ 11 (suspend "SUSPEND HERE"))`);
+  } catch (e) {
+    if (isSuspendEnvelope(e)) {
+      suspend = e;
+    } else {
+      throw e;
+    }
+  }
+  if (suspend) {
+    console.log(toJS(suspendValueFromEnvelope(suspend))); // => "SUSPEND HERE"
+
+    // Serialize/Deserialize
+    const json = toReferentialJSON(suspend, "$$$");
+    const revived: LISP.Suspend = fromReferentialJSON(json, "$$$");
+
+    // Resume
+    const ret = itrp.resume(revived, create.Number(31));
+    console.log(toJS(ret)); // => 42
+  }
+
 ```
 
 ## R7RS Specification
@@ -88,7 +156,7 @@ const num = toJS(ret); // returns 2.
 
 ## TODO
 
-  - Better documentation (espacially Javascript interfaces).
+  - Better documentation (espacially Javascript interfaces more).
   - REPL for Node.js.
   - Expose all items in create, forms, part of functions and LISP that can be called directly for usability.
   - Review the parameter names of functions. (to match R7RS)

@@ -42,7 +42,8 @@ export const SpecialCharacters = {
 } as const;
 
 export type ParserOptions = {
-  removeLineInfo: boolean;
+  removeLineInfo?: boolean,
+  extended?: boolean,
 };
 
 // ------------------------------------------------
@@ -290,6 +291,13 @@ export const fromTokenTreeToObject = (
       const ret = fromTokenTreeToObject(items[1], info, options, labels);
       (placeholder as any[]).splice(0, placeholder.length, ...ret);
       return placeholder;
+    } else if (options?.extended && is.Object(node)) {
+      return node;
+    } else if (options?.extended && node[0] === "&") {
+      if (node.length != 2) {
+        throw new Error(`Parse error: JS Node must be like ["&", <object>]: ${typeof node} value: ${node}`);
+      }
+      return create.JS("inline", node[1])
     } else {
       // Any other list. Process car and cdr respectively.
       return create.Pair(
@@ -300,28 +308,27 @@ export const fromTokenTreeToObject = (
       );
     }
 
-    // --- For extended token trees blow.----
-
-  } else if (node === null) {
+  } else if (options?.extended && node === null) {
     return create.Null();
-  } else if (typeof node === "number") {
+  } else if (options?.extended && typeof node === "number") {
     return JSNumberToNumber(node);
-  } else if (typeof node === "boolean") {
+  } else if (options?.extended && typeof node === "boolean") {
     return create.Boolean(node);
-  } else if (node instanceof Array && node[0] === "&") {
-    if (node.length != 2) {
-      throw new Error(`Parse error: JS Node must be like ["&", <object>]: ${typeof node} value: ${node}`);
-    }
-    return create.JS("inline", node[1])
-  } else if (is.Object(node)) {
-    return node;
   } else {
     throw new Error(`Parse error: unexpected node type: ${typeof node} value: ${node}`);
   }
 }
 
-// Alias
-export const fromJS = fromTokenTreeToObject;
+export const fromJS = (
+  node: LISP.ExtendedTokenTree,
+  info: LISP.SourceInfo | null = null,
+  options?: Omit<ParserOptions, "extended">,
+): LISP.Object => {
+  return fromTokenTreeToObject(node, info, {
+    ...(options ?? {}),
+    extended: true,
+  })
+};
 
 // Tokenize and parse a program (s-expressions) and build a AST with a root of "begin"
 export const fromProgramToAST = (src: string, options?: ParserOptions): LISP.AST => {

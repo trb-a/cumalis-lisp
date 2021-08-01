@@ -1,9 +1,11 @@
+/* eslint-disable jest/no-conditional-expect */
 import fs from "fs";
-import { assert, contentCS, create, defineBuiltInProcedure, forms, fromReferentialJSON, is, isSuspendEnvelope, suspendValueFromEnvelope, toReferentialJSON } from "../src/utils";
+import { assert, contentCS, create, defineBuiltInProcedure, forms, fromReferentialJSON, is, isSuspendEnvelope, SuspendEnvelope, suspendValueFromEnvelope, toReferentialJSON } from "../src/utils";
 import { equalQ } from "../src/equivalence";
 import { toJS, writeObject } from "../src/unparser";
-import { Envelope, Interpreter } from "../src/interpreter";
+import { Interpreter } from "../src/interpreter";
 import { LISP } from "../src/types";
+import { fromJS } from "../src";
 
 const logger = console; // To avoid to type console dot log.
 const r7rsTest = fs.readFileSync("./__tests__/r7rs.scm").toString();
@@ -118,30 +120,78 @@ test('Results', () => {
   expect(failCount).toBe(0);
 });
 
-test('suspend / serialize / deserialize / resume and toJS.', () => {
+let console_value: any = null;
+const console__log = (v: any) => (console_value = v, undefined);
+
+test('Basic example', () => {
+  const itrp = new Interpreter(); // Create interpreter.
+  const ret = itrp.eval(`
+    (define (fib n)
+      (if (<= n 2)
+          1
+          (+ (fib (- n 1)) (fib (- n 2)))))
+    (fib 10)
+  `); // Evaluate S-expression.
+  expect(toJS(ret)).toBe(55);
+});
+
+
+test('Defining built-in function / built-in macro example', () => {
+  const itrp = new Interpreter(); // Create interpreter.
+  const helloProc = defineBuiltInProcedure("hello", [ // Define procedure
+    { name: "obj" }
+  ], function ({obj}) {
+    if (!is.Object(obj)) {
+      throw new Error("Not a object");
+    }
+    console__log(`Hello ${toJS(obj)}`);
+    return create.Number(42);
+  });
+  const hello2Proc = defineBuiltInProcedure("hello2", [ // Define macro
+    { name: "obj" }
+  ], function ({obj}) {
+    if (!is.Object(obj)) {
+      throw new Error("Not a object");
+    }
+    return fromJS(["string-append", `"HELLO "`, obj]); // Write LISP as JS array.
+  }, true); // <-- this "true" indicates macro.
+
+  itrp.setBuiltInProcedure(helloProc); // Set the procedure to the interpreter.
+  itrp.setBuiltInProcedure(hello2Proc);
+
+  expect(toJS(itrp.eval(`(hello "world")`))).toBe(42);
+  expect(console_value).toBe("Hello world")
+  expect(toJS(itrp.eval(`(hello2 "WORLD")`))).toBe("HELLO WORLD");
+});
+
+test('Suspend / serialize / deserialize / resume and toJS.', () => {
   // Suspend
-  let suspend: Envelope;
+  const itrp = new Interpreter(); // Create interpreter.
+
+  // Suspend
+  let suspend: SuspendEnvelope | null = null;
   try {
-    itrp.eval(`(+ 11 (suspend 100))`);
+    itrp.eval(`(+ 11 (suspend "SUSPEND HERE"))`);
   } catch (e) {
-    suspend = e;
+    if (isSuspendEnvelope(e)) {
+      suspend = e;
+    } else {
+      throw e;
+    }
   }
-  expect(isSuspendEnvelope(suspend)).toBe(true);
-  if (!isSuspendEnvelope(suspend)) {
-    return;
-  }
-  expect(toJS(suspendValueFromEnvelope(suspend))).toBe(100);
+  if (suspend) {
+    console__log(toJS(suspendValueFromEnvelope(suspend)));
+    expect(console_value).toBe("SUSPEND HERE");
 
-  // Serialize/Deserialize
-  const json = toReferentialJSON(suspend, "$$$");
-  const revived: LISP.Suspend = fromReferentialJSON(json, "$$$");
-  expect(isSuspendEnvelope(revived)).toBe(true);
-  if(!isSuspendEnvelope(revived)) {
-    return;
-  }
-  expect(toJS(suspendValueFromEnvelope(revived))).toBe(100);
+    // Serialize/Deserialize
+    const json = toReferentialJSON(suspend, "$$$");
+    const revived: LISP.Suspend = fromReferentialJSON(json, "$$$");
 
-  // Resume
-  const ret = itrp.resume(revived, create.Number(31));
-  expect(toJS(ret)).toBe(42);
+    // Resume
+    const ret = itrp.resume(revived, create.Number(31));
+    console__log(toJS(ret)); // => 42
+    expect(console_value).toBe(42);
+  } else {
+    expect("Here").toBe("Never");
+  }
 });

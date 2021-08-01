@@ -599,8 +599,10 @@ export class Interpreter {
               } else {
                 throw e;
               }
+            } else if (e instanceof Error) {
+              throw e;
             } else {
-              // JSException is wrapped in Exception
+              // Other Javascript values will be wrapped in Exception.
               throw create.Exception(cstack, create.JS("inline", e), false);
             }
           }
