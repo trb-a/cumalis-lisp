@@ -288,9 +288,9 @@ const member =  defineBuiltInProcedure("member", [
     assert.Procedure(compare);
     const [, current, next] = list;
     return forms.If(
-      forms.Call(compare, current, obj),
-      list,
-      forms.CallBuiltIn("member", obj, next, compare)
+      forms.Call(compare, create.MultiValue([current, obj])),
+      forms.Quote(list),
+      forms.CallBuiltIn("member", create.MultiValue([obj, next, compare]))
     );
   }
 }, true);

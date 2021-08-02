@@ -172,3 +172,4 @@ export declare const isSuspendEnvelope: (o: (any)) => o is SuspendEnvelope;
 export declare const suspendValueFromEnvelope: (envelope: SuspendEnvelope) => LISP.Object;
 export declare const toReferentialJSON: (tree: (any), referenceTag: string) => string;
 export declare const fromReferentialJSON: (json: string, referenceTag: string) => any;
+export declare const foldcase: (str: string) => string;

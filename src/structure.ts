@@ -33,7 +33,7 @@ const Import = defineBuiltInProcedure("import", [
     }
     const lib = itrp.getBuiltInLibrary(item);
     if (!lib) {
-      throw create.Error("error", `Library "${lib} not found."`);
+      throw create.Error("error", `Library "${item}" not found.`);
     }
     const dict = lib(itrp);
     for (const name of Object.keys(dict)) {

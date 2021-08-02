@@ -44,6 +44,7 @@ export type UnparserOptions = {
 // - No space after opening parentheses. (including vector and bytevector)
 // - No space before closing parentheses.
 // - No space after quotatings.
+// - No space before opening parentheses after datum label.
 // When style="display", <character> and <string> are quoted like ""..."".
 export const fromTokensToString = (tokens: LISP.Token[]): string => {
   let ret = "";
@@ -54,7 +55,8 @@ export const fromTokensToString = (tokens: LISP.Token[]): string => {
       : curr;
     const space = (
       ret === "" || prev.slice(0, 1) === "(" || curr.slice(-1) === ")" ||
-      Object.values(Quotings).indexOf(prev) >= 0
+      Object.values(Quotings).indexOf(prev) >= 0 ||
+      (/^#\d+=$/.test(prev) && curr === "(")
     ) ? "" : " ";
     ret = ret + space + str;
     prev = curr;
@@ -128,11 +130,12 @@ export const fromObjectToTokenTree = <T extends UnparserOptions = { extended: fa
       }
     }
     foundObjects.add(obj);
-    ancestors.add(obj);
+    const ancestorsWithMe = new Set(ancestors);
+    ancestorsWithMe.add(obj);
     if (is.Pair(obj)) {
-      study(obj[1], depth + 1, ancestors); study(obj[2], depth + 1, ancestors);
+      study(obj[1], depth + 1, ancestorsWithMe); study(obj[2], depth + 1, ancestorsWithMe);
     } else if (is.Vector(obj)) {
-      obj[1].forEach(item => study(item, depth + 1, ancestors));
+      obj[1].forEach(item => study(item, depth + 1, ancestorsWithMe));
     }
   }
   study(obj, 0, new Set());
@@ -223,9 +226,20 @@ export const fromObjectToTokenTree = <T extends UnparserOptions = { extended: fa
         } else if (cdr[0] !== "<pair>") {
           return [fn(car, depth + 1), ".", fn(cdr, depth + 1)];
         } else if (car[0] === "<symbol>" && Quotings[car[1]]) {
-          return [Quotings[car[1]], ...(fn(cdr, depth + 1) as LISP.TokenTree[])];
+          const cdrTT = fn(cdr, depth + 1);
+          if (cdrTT instanceof Array && !is.Object(cdrTT)) {
+            return [Quotings[car[1]], ...cdrTT];
+          } else {
+            return [Quotings[car[1]], cdrTT]; // Maybe Datum reference.
+          }
         } else {
-          return [fn(car, depth + 1), ...fn(cdr, depth + 1) as LISP.TokenTree[]]
+          const carTT = fn(car, depth + 1);
+          const cdrTT = fn(cdr, depth + 1);
+          if (cdrTT instanceof Array && !is.Object(cdrTT)) {
+            return [carTT, ...cdrTT];
+          } else {
+            return [carTT, ".", cdrTT]; // Maybe Datum reference.
+          }
         }
       case "<js>":
         if (!extended) {

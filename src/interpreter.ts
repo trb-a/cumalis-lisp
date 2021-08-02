@@ -32,6 +32,9 @@ import ReadLibrary from "./libraries/read";
 import LazyLibrary from "./libraries/lazy";
 import TimeLibrary from "./libraries/time";
 import InexactLibrary from "./libraries/inexact";
+import CaseLambdaLibrary from "./libraries/case-lambda";
+import CharLibrary from "./libraries/char";
+import CxrLibrary from "./libraries/cxr";
 
 // -------------------------------------------------------
 //                       Consant
@@ -63,6 +66,9 @@ const BuiltInLibraryDefinitions: Record<string, BuiltInLibraryDefinition> = {
   "(scheme lazy)": LazyLibrary,
   "(scheme time)": TimeLibrary,
   "(scheme inexact)": InexactLibrary,
+  "(scheme case-lambda)": CaseLambdaLibrary,
+  "(scheme char)": CharLibrary,
+  "(scheme cxr)": CxrLibrary,
 };
 
 const BuiltInJSObjects: [string, LISP.Object][] = [
@@ -208,6 +214,11 @@ export class Interpreter {
       return create.Symbol(name);
     }
     this.builtins.library[name] = value;
+    // Note: execute library function here, but expose no symbol.
+    // Otherwize, deseriarized continuation may fail.
+    // IMPROVEME: Separete definition of procedure and returning symbol list.
+    value(this);
+
     return create.Symbol(name);
   }
   getProcedureContent(proc: LISP.Procedure): (

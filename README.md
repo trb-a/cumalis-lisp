@@ -25,12 +25,15 @@ $ npm install cumalis-lisp
   * limited support for syntax-rules (see Limitations).
   * quasiquote.
   * etc.
-- Other standard procedures libraries listed blow are implemented:
+- Other standard libraries implemented:
   * (scheme read)
   * (scheme write)
   * (scheme promise)
   * (scheme time)
   * (scheme inexact)
+  * (scheme case-lambda)
+  * (scheme char)
+  * (scheme cxr)
 - Proper tail recursion. (tail call optimization)
 - Javascript interfaces
   * Adding built-in procedures.
@@ -38,7 +41,7 @@ $ npm install cumalis-lisp
   * Able to contain Javascript objects in AST.
 - All objects, AST, and call-frames consist of pure JSON objects.
   * Continuations can be serialized to JSON strings. (Circular references need to be resolved.)
-  * Comes with simple JSON serializer/deserializer as a utility. (toReferentialJSON / fromReferentialJSON)
+  * Simple JSON serializer/deserializer utility is bundled. (toReferentialJSON / fromReferentialJSON)
 - No dependency.
 
 With these features, The following application fields can be considered.
@@ -138,20 +141,18 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
 ## Limitations
 
   - R7RS standard procedures libraries listed below are not implemented.
-    * (scheme cxr)
-    * (scheme char)
     * (scheme complex)
     * (scheme file)
-    * (scheme eval)
     * (scheme process-context)
+    * (scheme eval)
     * (scheme repl)
-    * (scheme case-lambda)
     * (scheme r5rs)
   - Limited support for importing / exporting libraries.
     * "(scheme base)" is imported by default. Importing "(scheme base)" is just ignored.
-    * "define-library" "cond-expand" is not implemented. (But defining your own "built-in" library is supported.)
     * "import" can only import built-in libraries at the top-level.
     * Importing with "only" "except" "prefix" "rename" is not supported.
+    * "define-library" "cond-expand" "include" and "include-cli" are not implemented.
+      (But you can define your own "built-in" procedures and libraries.)
   - About number, only integer and real number is supported.
     * Complex / fraction number is not implemented.
     * 1.0 and 1 is same value. (like Javascript's number primitive).
@@ -162,13 +163,10 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
     * Only flat patterns are supported. No nested patterns.
     * Improper list patterns are not supported.
   - (eqv? "aaa" "aaa") returns #t. (like Javascript's "aaa" === "aaa" returns true).
-  - #!fold-case does downcase. (by Javascript's String.toLowerCase).
   - Strings doesn't handle surrogate pairs correctly. (Works like Javascript string).
-  - "exact-integer-sqrt" is very slow, can calculate exact integer & positive value.
-  - toReferentialJSON / fromReferentialJSON can't serialize Javascript's class instances
-    except simple (not extended) "Object" or "Array" instances.
+  - toReferentialJSON / fromReferentialJSON don't respect "toJSON" property of class instances. If you want to include class instances in serialization, please consider other serializers like js-yaml, etc.
 
-## TODO
+## TODOs / Future plans
 
   - Better documentation (especially Javascript interfaces more).
   - REPL for Node.js.
@@ -176,6 +174,8 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
   - Review the parameter names of functions. (to match R7RS)
   - Add JSDocs.
   - Add async/await feature to handle Javascript's async functions.
+  - Add some built-in library to handle <js> objects.
+  - It will be nice if there are Regular expressions(SRFI-115), Hashtables(SRFI-69), Handling date and time(SRFI-19), Sorting lists and vectors, etc.
 
 ## LICENSE
 

@@ -400,26 +400,17 @@ const square = defineBuiltInProcedure("square", [
 });
 
 // (sqrt z) inexact library procedure.
-
-// Don't know what is use of this procedure...
-// Foolishly implemented this just for testing purpose.
-// There must be good algorithm for this, but who use this?
 const exactIntegerSqrt = defineBuiltInProcedure("exact-integer-sqrt", [
   { name: "k" },
 ], ({ k }) => {
   assert.IntegerNumber(k);
   const num = numberToJSNumber(k);
   if (!Number.isSafeInteger(num) || num < 0) {
-    throw create.Error("out-of-range", "exact-integer-sqrt can calculate safe integer & positive value.");
+    throw create.Error("out-of-range", "exact-integer-sqrt can calculate exact & non-negative value.");
   }
-  for (let curr = num; curr > 0; curr--) {
-    const s = Math.floor(Math.sqrt(curr));
-    const r = num - (s ** 2);
-    if (num < ((s + 1) ** 2)) {
-      return create.MultiValue([JSNumberToNumber(s), JSNumberToNumber(r)]);
-    }
-  }
-  return create.MultiValue([JSNumberToNumber(0), JSNumberToNumber(num)]);
+  const s = Math.floor(Math.sqrt(num));
+  const r = num - (s ** 2);
+  return create.MultiValue([JSNumberToNumber(s), JSNumberToNumber(r)]);
 });
 
 const expt = defineBuiltInProcedure("expt", [

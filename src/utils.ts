@@ -764,3 +764,40 @@ export const fromReferentialJSON = (json: string, referenceTag: string): any => 
   }
   return replace(parsed);
 }
+
+// From http://unicode.org/Public/UCD/latest/ucd/CaseFolding.txt
+// 1. Exctract mappings with status C + S (= simple case folding).
+// 2. Exclude mappings that is same as String.toLowerCase().
+// Result: 102 mappings.
+const foldcaseMap: Record<string, string> = {
+  "\u{B5}": "\u{3BC}", "\u{345}": "\u{3B9}", "\u{3C2}": "\u{3C3}", "\u{3D0}": "\u{3B2}",
+  "\u{3D1}": "\u{3B8}", "\u{3D5}": "\u{3C6}", "\u{3D6}": "\u{3C0}", "\u{3F0}": "\u{3BA}",
+  "\u{3F1}": "\u{3C1}", "\u{3F5}": "\u{3B5}", "\u{13F8}": "\u{13F0}", "\u{13F9}": "\u{13F1}",
+  "\u{13FA}": "\u{13F2}", "\u{13FB}": "\u{13F3}", "\u{13FC}": "\u{13F4}", "\u{13FD}": "\u{13F5}",
+  "\u{1C80}": "\u{432}", "\u{1C81}": "\u{434}", "\u{1C82}": "\u{43E}", "\u{1C83}": "\u{441}",
+  "\u{1C84}": "\u{442}", "\u{1C85}": "\u{442}", "\u{1C86}": "\u{44A}", "\u{1C87}": "\u{463}",
+  "\u{1C88}": "\u{A64B}", "\u{1E9B}": "\u{1E61}", "\u{1FBE}": "\u{3B9}", "\u{AB70}": "\u{13A0}",
+  "\u{AB71}": "\u{13A1}", "\u{AB72}": "\u{13A2}", "\u{AB73}": "\u{13A3}", "\u{AB74}": "\u{13A4}",
+  "\u{AB75}": "\u{13A5}", "\u{AB76}": "\u{13A6}", "\u{AB77}": "\u{13A7}", "\u{AB78}": "\u{13A8}",
+  "\u{AB79}": "\u{13A9}", "\u{AB7A}": "\u{13AA}", "\u{AB7B}": "\u{13AB}", "\u{AB7C}": "\u{13AC}",
+  "\u{AB7D}": "\u{13AD}", "\u{AB7E}": "\u{13AE}", "\u{AB80}": "\u{13B0}", "\u{AB81}": "\u{13B1}",
+  "\u{AB82}": "\u{13B2}", "\u{AB83}": "\u{13B3}", "\u{AB84}": "\u{13B4}", "\u{AB85}": "\u{13B5}",
+  "\u{AB86}": "\u{13B6}", "\u{AB87}": "\u{13B7}", "\u{AB88}": "\u{13B8}", "\u{AB89}": "\u{13B9}",
+  "\u{AB8A}": "\u{13BA}", "\u{AB8B}": "\u{13BB}", "\u{AB8C}": "\u{13BC}", "\u{AB8D}": "\u{13BD}",
+  "\u{AB8E}": "\u{13BE}", "\u{AB90}": "\u{13C0}", "\u{AB91}": "\u{13C1}", "\u{AB92}": "\u{13C2}",
+  "\u{AB93}": "\u{13C3}", "\u{AB94}": "\u{13C4}", "\u{AB95}": "\u{13C5}", "\u{AB96}": "\u{13C6}",
+  "\u{AB97}": "\u{13C7}", "\u{AB98}": "\u{13C8}", "\u{AB99}": "\u{13C9}", "\u{AB9A}": "\u{13CA}",
+  "\u{AB9B}": "\u{13CB}", "\u{AB9C}": "\u{13CC}", "\u{AB9D}": "\u{13CD}", "\u{AB9E}": "\u{13CE}",
+  "\u{ABA0}": "\u{13D0}", "\u{ABA1}": "\u{13D1}", "\u{ABA2}": "\u{13D2}", "\u{ABA3}": "\u{13D3}",
+  "\u{ABA4}": "\u{13D4}", "\u{ABA5}": "\u{13D5}", "\u{ABA6}": "\u{13D6}", "\u{ABA7}": "\u{13D7}",
+  "\u{ABA8}": "\u{13D8}", "\u{ABA9}": "\u{13D9}", "\u{ABAA}": "\u{13DA}", "\u{ABAB}": "\u{13DB}",
+  "\u{ABAC}": "\u{13DC}", "\u{ABAD}": "\u{13DD}", "\u{ABAE}": "\u{13DE}", "\u{ABB0}": "\u{13E0}",
+  "\u{ABB1}": "\u{13E1}", "\u{ABB2}": "\u{13E2}", "\u{ABB3}": "\u{13E3}", "\u{ABB4}": "\u{13E4}",
+  "\u{ABB5}": "\u{13E5}", "\u{ABB6}": "\u{13E6}", "\u{ABB7}": "\u{13E7}", "\u{ABB8}": "\u{13E8}",
+  "\u{ABB9}": "\u{13E9}", "\u{ABBA}": "\u{13EA}", "\u{ABBB}": "\u{13EB}", "\u{ABBC}": "\u{13EC}",
+  "\u{ABBD}": "\u{13ED}", "\u{ABBE}": "\u{13EE}",
+};
+const foldcaseRe = new RegExp("[" + Object.keys(foldcaseMap).join("") + "]", "g");
+export const foldcase = (str: string): string => {
+  return str.replace(foldcaseRe, c => foldcaseMap[c as any]).toLowerCase();
+}

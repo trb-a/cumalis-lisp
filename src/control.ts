@@ -65,7 +65,7 @@ const stringMap = defineBuiltInProcedure("string-map", [
       forms.CallBuiltIn("string", forms.Call(proc, ...arr.map(str => create.Character(str[1][0])))),
       forms.CallBuiltIn("string-map", proc, ...arr.map(str => create.String(str[1].slice(1), false)))
     );
-  } else if (arr.every(str => str[1].length === 1)) {
+  } else if (arr.every(str => str[1].length >= 1)) {
     return forms.CallBuiltIn("string",
       forms.Call(proc, ...arr.map(str => create.Character(str[1][0]))),
     );
@@ -129,7 +129,7 @@ const stringForEach = defineBuiltInProcedure("string-for-each", [
       forms.Call(proc, ...arr.map(str => create.Character(str[1][0]))),
       forms.CallBuiltIn("string-for-each", proc, ...arr.map(str => create.String(str[1].slice(1), false)))
     );
-  } else if (arr.every(str => str[1].length === 1)) {
+  } else if (arr.every(str => str[1].length >= 1)) {
     return forms.Call(proc, ...arr.map(str => create.Character(str[1][0])));
   } else {
     return ["<undefined>"];
@@ -151,7 +151,7 @@ const vectorForEach = defineBuiltInProcedure("vector-for-each", [
       forms.Call(proc, create.MultiValue(arr.map(vec => vec[1][0]))),
       forms.CallBuiltIn("vector-for-each", proc, ...arr.map(vec => create.Vector(vec[1].slice(1), false)))
     );
-  } else if (arr.every(vec => vec[1].length === 1)) {
+  } else if (arr.every(vec => vec[1].length >= 1)) {
     return forms.Call(proc, create.MultiValue(arr.map(vec => vec[1][0])));
   } else {
     return forms.Quote(["<null>"]);

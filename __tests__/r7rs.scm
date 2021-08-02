@@ -4,14 +4,25 @@
 ;X https://github.com/ashinn/chibi-scheme/blob/master/tests/r7rs-tests.scm
 ;X https://github.com/lexi-lambda/racket-r7rs/blob/master/r7rs-test/tests/r7rs/chibi/tests/r7rs-tests.rkt
 
-;X[Only some libraries are implemented.]
-(import (scheme base) (scheme write) (scheme read) (scheme lazy) (scheme time) (scheme inexact))
-;X (import (scheme base) (scheme char) (scheme lazy)
-;X         (scheme inexact) (scheme complex) (scheme time)
-;X         (scheme file) (scheme read) (scheme write)
-;X         (scheme eval) (scheme process-context) (scheme case-lambda)
-;X         (scheme r5rs)
-;X         )
+(import (scheme base)
+        (scheme char)
+        (scheme lazy)
+        (scheme inexact)
+;X[Some libraries are not implemented.]
+;X        (scheme complex)
+        (scheme time)
+;X[Some libraries are not implemented.]
+;X        (scheme file)
+        (scheme read)
+        (scheme write)
+;X[Some libraries are not implemented.]
+;X        (scheme eval)
+;X        (scheme process-context)
+        (scheme case-lambda)
+;X[Some libraries are not implemented.]
+;X        (scheme r5rs)
+;X        (scheme repl) -- Note: No tests yet.
+        (scheme cxr))
 
 (test-begin "R7RS")
 
@@ -173,7 +184,7 @@
            (mean / /))))
 (let*-values (((a b c) (means '(8 5 99 1 22))))
   (test 27 a)
-(test-round 9.728 b)
+  (test-round 9.728 b)
 ;X[fraction]
 ;X  (test 1800/497 c)
   )
@@ -181,14 +192,14 @@
 (let*-values (((root rem) (exact-integer-sqrt 32)))
   (test 35 (* root rem)))
 
-;X[exact-integer-sqrt is limited inplementation]
-;X(test '(1073741824 0)
-;X    (let*-values (((root rem) (exact-integer-sqrt (expt 2 60))))
-;X      (list root rem)))
+;X[Non exact value]
+;X (test '(1073741824 0)
+;X     (let*-values (((root rem) (exact-integer-sqrt (expt 2 60))))
+;X       (list root rem)))
 ;X
-;X(test '(1518500249 3000631951)
-;X    (let*-values (((root rem) (exact-integer-sqrt (expt 2 61))))
-;X      (list root rem)))
+;X (test '(1518500249 3000631951)
+;X     (let*-values (((root rem) (exact-integer-sqrt (expt 2 61))))
+;X       (list root rem)))
 ;X
 ;X  (test '(815238614083298888 443242361398135744)
 ;X      (let*-values (((root rem) (exact-integer-sqrt (expt 2 119))))
@@ -322,33 +333,32 @@
 (test '(list 3 4) (quasiquote (list (unquote (+ 1 2)) 4)) )
 (test `(list ,(+ 1 2) 4) (quasiquote (list (unquote (+ 1 2)) 4)))
 
-;X[case-lambda library]
-;X (define plus
-;X   (case-lambda
-;X    (() 0)
-;X    ((x) x)
-;X    ((x y) (+ x y))
-;X    ((x y z) (+ (+ x y) z))
-;X    (args (apply + args))))
-;X
-;X:(test 0 (plus))
-;X (test 1 (plus 1))
-;X (test 3 (plus 1 2))
-;X (test 6 (plus 1 2 3))
-;X (test 10 (plus 1 2 3 4))
-;X
-;X (define mult
-;X   (case-lambda
-;X    (() 1)
-;X    ((x) x)
-;X    ((x y) (* x y))
-;X    ((x y . z) (apply mult (* x y) z))))
-;X
-;X (test 1 (mult))
-;X (test 1 (mult 1))
-;X (test 2 (mult 1 2))
-;X (test 6 (mult 1 2 3))
-;X (test 24 (mult 1 2 3 4))
+(define plus
+  (case-lambda
+   (() 0)
+   ((x) x)
+   ((x y) (+ x y))
+   ((x y z) (+ (+ x y) z))
+   (args (apply + args))))
+
+(test 0 (plus))
+(test 1 (plus 1))
+(test 3 (plus 1 2))
+(test 6 (plus 1 2 3))
+(test 10 (plus 1 2 3 4))
+
+(define mult
+  (case-lambda
+   (() 1)
+   ((x) x)
+   ((x y) (* x y))
+   ((x y . z) (apply mult (* x y) z))))
+
+(test 1 (mult))
+(test 1 (mult 1))
+(test 2 (mult 1 2))
+(test 6 (mult 1 2 3))
+(test 24 (mult 1 2 3 4))
 
 (test-end)
 
@@ -1001,8 +1011,7 @@
 (test #f (memq 'a '(b c d)))
 (test #f (memq (list 'a) '(b (a) c)))
 (test '((a) c) (member (list 'a) '(b (a) c)))
-;X[char library]
-;X(test '("b" "c") (member "B" '("a" "b" "c") string-ci=?))
+(test '("b" "c") (member "B" '("a" "b" "c") string-ci=?))
 (test '(101 102) (memv 101 '(100 101 102)))
 
 (let ()
@@ -1082,76 +1091,73 @@
 (test #t (char>=? #\a #\a))
 (test #t (char>=? #\b #\b #\a))
 
-;X[char library]
-;X(test #t (char-ci=? #\a #\a))
-;X(test #t (char-ci=? #\a #\A #\a))
-;X(test #f (char-ci=? #\a #\b))
-;X(test #t (char-ci<? #\a #\B #\c))
-;X(test #f (char-ci<? #\A #\a))
-;X(test #f (char-ci<? #\b #\A))
-;X(test #f (char-ci>? #\A #\b))
-;X(test #f (char-ci>? #\a #\A))
-;X(test #t (char-ci>? #\c #\B #\a))
-;X(test #t (char-ci<=? #\a #\B #\b))
-;X(test #t (char-ci<=? #\A #\a))
-;X(test #f (char-ci<=? #\b #\A))
-;X(test #f (char-ci>=? #\A #\b))
-;X(test #t (char-ci>=? #\a #\A))
-;X(test #t (char-ci>=? #\b #\B #\a))
+(test #t (char-ci=? #\a #\a))
+(test #t (char-ci=? #\a #\A #\a))
+(test #f (char-ci=? #\a #\b))
+(test #t (char-ci<? #\a #\B #\c))
+(test #f (char-ci<? #\A #\a))
+(test #f (char-ci<? #\b #\A))
+(test #f (char-ci>? #\A #\b))
+(test #f (char-ci>? #\a #\A))
+(test #t (char-ci>? #\c #\B #\a))
+(test #t (char-ci<=? #\a #\B #\b))
+(test #t (char-ci<=? #\A #\a))
+(test #f (char-ci<=? #\b #\A))
+(test #f (char-ci>=? #\A #\b))
+(test #t (char-ci>=? #\a #\A))
+(test #t (char-ci>=? #\b #\B #\a))
 
-;X[char-library]
-;X (test #t (char-alphabetic? #\a))
-;X (test #f (char-alphabetic? #\space))
-;X (test #t (char-numeric? #\0))
-;X (test #f (char-numeric? #\.))
-;X (test #f (char-numeric? #\a))
-;X (test #t (char-whitespace? #\space))
-;X (test #t (char-whitespace? #\tab))
-;X (test #t (char-whitespace? #\newline))
-;X (test #f (char-whitespace? #\_))
-;X (test #f (char-whitespace? #\a))
-;X (test #t (char-upper-case? #\A))
-;X (test #f (char-upper-case? #\a))
-;X (test #f (char-upper-case? #\3))
-;X (test #t (char-lower-case? #\a))
-;X (test #f (char-lower-case? #\A))
-;X (test #f (char-lower-case? #\3))
-;X
-;X (test #t (char-alphabetic? #\Λ))
-;X (test #f (char-alphabetic? #\x0E50))
-;X (test #t (char-upper-case? #\Λ))
-;X (test #f (char-upper-case? #\λ))
-;X (test #f (char-lower-case? #\Λ))
-;X (test #t (char-lower-case? #\λ))
-;X (test #f (char-numeric? #\Λ))
-;X (test #t (char-numeric? #\x0E50))
-;X (test #t (char-whitespace? #\x1680))
-;X
-;X (test 0 (digit-value #\0))
-;X (test 3 (digit-value #\3))
-;X (test 9 (digit-value #\9))
-;X (test 4 (digit-value #\x0664))
-;X ;(test 0 (digit-value #\x0AE6))
-;X (test #f (digit-value #\.))
-;X (test #f (digit-value #\-))
+(test #t (char-alphabetic? #\a))
+(test #f (char-alphabetic? #\space))
+(test #t (char-numeric? #\0))
+(test #f (char-numeric? #\.))
+(test #f (char-numeric? #\a))
+(test #t (char-whitespace? #\space))
+(test #t (char-whitespace? #\tab))
+(test #t (char-whitespace? #\newline))
+(test #f (char-whitespace? #\_))
+(test #f (char-whitespace? #\a))
+(test #t (char-upper-case? #\A))
+(test #f (char-upper-case? #\a))
+(test #f (char-upper-case? #\3))
+(test #t (char-lower-case? #\a))
+(test #f (char-lower-case? #\A))
+(test #f (char-lower-case? #\3))
+
+(test #t (char-alphabetic? #\Λ))
+(test #f (char-alphabetic? #\x0E50))
+(test #t (char-upper-case? #\Λ))
+(test #f (char-upper-case? #\λ))
+(test #f (char-lower-case? #\Λ))
+(test #t (char-lower-case? #\λ))
+(test #f (char-numeric? #\Λ))
+(test #t (char-numeric? #\x0E50))
+(test #t (char-whitespace? #\x1680))
+
+(test 0 (digit-value #\0))
+(test 3 (digit-value #\3))
+(test 9 (digit-value #\9))
+(test 4 (digit-value #\x0664))
+(test 0 (digit-value #\x0AE6))
+(test #f (digit-value #\.))
+(test #f (digit-value #\-))
 
 (test 97 (char->integer #\a))
 (test #\a (integer->char 97))
 
-;X[char-library]
-;X (test #\A (char-upcase #\a))
-;X (test #\A (char-upcase #\A))
-;X (test #\a (char-downcase #\a))
-;X (test #\a (char-downcase #\A))
-;X (test #\a (char-foldcase #\a))
-;X (test #\a (char-foldcase #\A))
-;X
-;X (test #\Λ (char-upcase #\λ))
-;X (test #\Λ (char-upcase #\Λ))
-;X (test #\λ (char-downcase #\λ))
-;X (test #\λ (char-downcase #\Λ))
-;X (test #\λ (char-foldcase #\λ))
-;X (test #\λ (char-foldcase #\Λ))
+(test #\A (char-upcase #\a))
+(test #\A (char-upcase #\A))
+(test #\a (char-downcase #\a))
+(test #\a (char-downcase #\A))
+(test #\a (char-foldcase #\a))
+(test #\a (char-foldcase #\A))
+
+(test #\Λ (char-upcase #\λ))
+(test #\Λ (char-upcase #\Λ))
+(test #\λ (char-downcase #\λ))
+(test #\λ (char-downcase #\Λ))
+(test #\λ (char-foldcase #\λ))
+(test #\λ (char-foldcase #\Λ))
 
 (test-end)
 
@@ -1214,70 +1220,70 @@
 (test #t (string>=? "abcd" "abcd" "abc"))
 (test #f (string>=? "abc" "bbc"))
 
-;X[char library]
-;X(test #t (string-ci=? "" ""))
-;X(test #t (string-ci=? "abc" "abc"))
-;X(test #f (string-ci=? "" "abc"))
-;X(test #t (string-ci=? "abc" "aBc"))
-;X(test #f (string-ci=? "abc" "aBcD"))
-;X
-;X(test #f (string-ci<? "abc" "aBc"))
-;X(test #t (string-ci<? "abc" "aBcD"))
-;X(test #f (string-ci<? "ABCd" "aBc"))
-;X
-;X(test #f (string-ci>? "abc" "aBc"))
-;X(test #f (string-ci>? "abc" "aBcD"))
-;X(test #t (string-ci>? "ABCd" "aBc"))
-;X
-;X(test #t (string-ci<=? "abc" "aBc"))
-;X(test #t (string-ci<=? "abc" "aBcD"))
-;X(test #f (string-ci<=? "ABCd" "aBc"))
-;X
-;X(test #t (string-ci>=? "abc" "aBc"))
-;X(test #f (string-ci>=? "abc" "aBcD"))
-;X(test #t (string-ci>=? "ABCd" "aBc"))
-;X
-;X(test #t (string-ci=? "ΑΒΓ" "αβγ" "αβγ"))
-;X(test #f (string-ci<? "ΑΒΓ" "αβγ"))
-;X(test #f (string-ci>? "ΑΒΓ" "αβγ"))
-;X(test #t (string-ci<=? "ΑΒΓ" "αβγ"))
-;X(test #t (string-ci>=? "ΑΒΓ" "αβγ"))
-;X
-;X ;; latin
-;X (test "ABC" (string-upcase "abc"))
-;X (test "ABC" (string-upcase "ABC"))
-;X (test "abc" (string-downcase "abc"))
-;X (test "abc" (string-downcase "ABC"))
-;X (test "abc" (string-foldcase "abc"))
-;X (test "abc" (string-foldcase "ABC"))
-;X
-;X ;; cyrillic
-;X (test "ΑΒΓ" (string-upcase "αβγ"))
-;X (test "ΑΒΓ" (string-upcase "ΑΒΓ"))
-;X (test "αβγ" (string-downcase "αβγ"))
-;X (test "αβγ" (string-downcase "ΑΒΓ"))
-;X (test "αβγ" (string-foldcase "αβγ"))
-;X (test "αβγ" (string-foldcase "ΑΒΓ"))
-;X
-;X ;; special cases
-;X (test "SSA" (string-upcase "ßa"))
-;X (test "ßa" (string-downcase "ßa"))
-;X (test "ssa" (string-downcase "SSA"))
-;X (test "İ" (string-upcase "İ"))
-;X (test "i\x0307;" (string-downcase "İ"))
-;X (test "i\x0307;" (string-foldcase "İ"))
-;X (test "J̌" (string-upcase "ǰ"))
-;X
-;X ;; context-sensitive (final sigma)
-;X (test "ΓΛΏΣΣΑ" (string-upcase "γλώσσα"))
-;X (test "γλώσσα" (string-downcase "ΓΛΏΣΣΑ"))
-;X (test "γλώσσα" (string-foldcase "ΓΛΏΣΣΑ"))
-;X (test "ΜΈΛΟΣ" (string-upcase "μέλος"))
-;X (test #t (and (member (string-downcase "ΜΈΛΟΣ") '("μέλος" "μέλοσ")) #t))
-;X (test "μέλοσ" (string-foldcase "ΜΈΛΟΣ"))
-;X (test #t (and (member (string-downcase "ΜΈΛΟΣ ΕΝΌΣ")
-;X                       '("μέλος ενός" "μέλοσ ενόσ"))
-;X               #t))
+(test #t (string-ci=? "" ""))
+(test #t (string-ci=? "abc" "abc"))
+(test #f (string-ci=? "" "abc"))
+(test #t (string-ci=? "abc" "aBc"))
+(test #f (string-ci=? "abc" "aBcD"))
+
+(test #f (string-ci<? "abc" "aBc"))
+(test #t (string-ci<? "abc" "aBcD"))
+(test #f (string-ci<? "ABCd" "aBc"))
+
+(test #f (string-ci>? "abc" "aBc"))
+(test #f (string-ci>? "abc" "aBcD"))
+(test #t (string-ci>? "ABCd" "aBc"))
+
+(test #t (string-ci<=? "abc" "aBc"))
+(test #t (string-ci<=? "abc" "aBcD"))
+(test #f (string-ci<=? "ABCd" "aBc"))
+
+(test #t (string-ci>=? "abc" "aBc"))
+(test #f (string-ci>=? "abc" "aBcD"))
+(test #t (string-ci>=? "ABCd" "aBc"))
+
+(test #t (string-ci=? "ΑΒΓ" "αβγ" "αβγ"))
+(test #f (string-ci<? "ΑΒΓ" "αβγ"))
+(test #f (string-ci>? "ΑΒΓ" "αβγ"))
+(test #t (string-ci<=? "ΑΒΓ" "αβγ"))
+(test #t (string-ci>=? "ΑΒΓ" "αβγ"))
+
+;; latin
+(test "ABC" (string-upcase "abc"))
+(test "ABC" (string-upcase "ABC"))
+(test "abc" (string-downcase "abc"))
+(test "abc" (string-downcase "ABC"))
+(test "abc" (string-foldcase "abc"))
+(test "abc" (string-foldcase "ABC"))
+
+;; cyrillic
+(test "ΑΒΓ" (string-upcase "αβγ"))
+(test "ΑΒΓ" (string-upcase "ΑΒΓ"))
+(test "αβγ" (string-downcase "αβγ"))
+(test "αβγ" (string-downcase "ΑΒΓ"))
+(test "αβγ" (string-foldcase "αβγ"))
+(test "αβγ" (string-foldcase "ΑΒΓ"))
+
+;; special cases
+(test "SSA" (string-upcase "ßa"))
+(test "ßa" (string-downcase "ßa"))
+(test "ssa" (string-downcase "SSA"))
+(test "İ" (string-upcase "İ"))
+(test "i\x0307;" (string-downcase "İ"))
+(test "i\x0307;" (string-foldcase "İ"))
+(test "J̌" (string-upcase "ǰ"))
+
+;; context-sensitive (final sigma)
+(test "ΓΛΏΣΣΑ" (string-upcase "γλώσσα"))
+(test "γλώσσα" (string-downcase "ΓΛΏΣΣΑ"))
+(test "γλώσσα" (string-foldcase "ΓΛΏΣΣΑ"))
+(test "ΜΈΛΟΣ" (string-upcase "μέλος"))
+(test #t (and (member (string-downcase "ΜΈΛΟΣ") '("μέλος" "μέλοσ")) #t))
+;[maybe μέλος]
+;X(test "μέλοσ" (string-foldcase "ΜΈΛΟΣ"))
+(test #t (and (member (string-downcase "ΜΈΛΟΣ ΕΝΌΣ")
+                      '("μέλος ενός" "μέλοσ ενόσ"))
+              #t))
 
 (test "" (substring "" 0 0))
 (test "" (substring "a" 0 0))
@@ -1531,20 +1537,18 @@
       (set-cdr! (cddr ls1) ls1)
       (map * ls1 ls2)))
 
-;X[char-foldcase char library]
-;X(test "abdegh" (string-map char-foldcase "AbdEgH"))
+(test "abdegh" (string-map char-foldcase "AbdEgH"))
 
 (test "IBM" (string-map
  (lambda (c)
    (integer->char (+ 1 (char->integer c))))
  "HAL"))
 
-;X [char-upcase char library]
-;X(test "StUdLyCaPs"
-;X    (string-map
-;X     (lambda (c k) (if (eqv? k #\u) (char-upcase c) (char-downcase c)))
-;X     "studlycaps xxx"
-;X     "ululululul"))
+(test "StUdLyCaPs"
+    (string-map
+     (lambda (c k) (if (eqv? k #\u) (char-upcase c) (char-downcase c)))
+     "studlycaps xxx"
+     "ululululul"))
 
 (test #(b e h) (vector-map cadr '#((a b) (d e) (g h))))
 
@@ -1979,23 +1983,22 @@
     (flush-output-port out)
     (get-output-bytevector out)))
 
-;X[labels not guaranteed to be 0 indexed, spacing may differ]
-;X(test #t
-;X    (and (member
-;X          (let ((out (open-output-string))
-;X                (x (list 1)))
-;X            (set-cdr! x x)
-;X            (write x out)
-;X            (get-output-string out))
-;X          ;; labels not guaranteed to be 0 indexed, spacing may differ
-;X          '("#0=(1 . #0#)" "#1=(1 . #1#)"))
-;X         #t))
-;X
-;X(test "((1 2 3) (1 2 3))"
-;X    (let ((out (open-output-string))
-;X          (x (list 1 2 3)))
-;X      (write (list x x) out)
-;X      (get-output-string out)))
+(test #t
+    (and (member
+          (let ((out (open-output-string))
+                (x (list 1)))
+            (set-cdr! x x)
+            (write x out)
+            (get-output-string out))
+          ;; labels not guaranteed to be 0 indexed, spacing may differ
+          '("#0=(1 . #0#)" "#1=(1 . #1#)"))
+         #t))
+
+(test "((1 2 3) (1 2 3))"
+    (let ((out (open-output-string))
+          (x (list 1 2 3)))
+      (write (list x x) out)
+      (get-output-string out)))
 
 (test "((1 2 3) (1 2 3))"
     (let ((out (open-output-string))
@@ -2003,14 +2006,13 @@
       (write-simple (list x x) out)
       (get-output-string out)))
 
-;X[labels not guaranteed to be 0 indexed, spacing may differ]
-;X(test #t
-;X    (and (member (let ((out (open-output-string))
-;X                       (x (list 1 2 3)))
-;X                   (write-shared (list x x) out)
-;X                   (get-output-string out))
-;X                 '("(#0=(1 2 3) #0#)" "(#1=(1 2 3) #1#)"))
-;X         #t))
+(test #t
+    (and (member (let ((out (open-output-string))
+                       (x (list 1 2 3)))
+                   (write-shared (list x x) out)
+                   (get-output-string out))
+                 '("(#0=(1 2 3) #0#)" "(#1=(1 2 3) #1#)"))
+         #t))
 
 (test-begin "Read syntax")
 
@@ -2328,6 +2330,35 @@
 (test 3 (floor-quotient 10 3))
 (test -3 (quotient -10 3))
 (test -4 (floor-quotient -10 3))
+
+(test 1 (caar '((1 . 2) . (3 . 4))))
+(test 2 (cdar '((1 . 2) . (3 . 4))))
+
+(test 1 (caaar '(((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8)))))
+(test 2 (cdaar '(((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8)))))
+(test 3 (cadar '(((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8)))))
+(test 4 (cddar '(((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8)))))
+(test 5 (caadr '(((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8)))))
+(test 6 (cdadr '(((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8)))))
+(test 7 (caddr '(((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8)))))
+(test 8 (cdddr '(((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8)))))
+
+(test 1 (caaaar '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 2 (cdaaar '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 3 (cadaar '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 4 (cddaar '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 5 (caadar '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 6 (cdadar '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 7 (caddar '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 8 (cdddar '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 9 (caaadr '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 10 (cdaadr '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 11 (cadadr '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 12 (cddadr '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 13 (caaddr '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 14 (cdaddr '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 15 (cadddr '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+(test 16 (cddddr '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
 
 (test-end)
 

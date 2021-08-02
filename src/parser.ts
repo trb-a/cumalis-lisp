@@ -1,5 +1,5 @@
 import { LISP } from "./types";
-import { create, is, isDictionary, JSNumberToNumber, numberToJSNumber } from "./utils";
+import { create, is, isDictionary, JSNumberToNumber, numberToJSNumber, foldcase } from "./utils";
 
 // ------------------------------------------------
 //             Contants
@@ -81,7 +81,7 @@ export const fromStringToTokens = (
   const getLineColumn = makeGetLineColumn(src);
   const results: ReturnType<typeof fromStringToTokens> = [];
   TokenRe.lastIndex = 0;
-  let foldcase = false; // See R7RS 2.1.
+  let doFoldcase = false; // See R7RS 2.1.
   while (TokenRe.lastIndex < src.length) {
     const index = TokenRe.lastIndex;
     const [line, column] = getLineColumn(index);
@@ -93,14 +93,14 @@ export const fromStringToTokens = (
       throw new Error(`Tokenize failed. Unexpected token is: "${shortenErrStr}": ${JSON.stringify(info)}`);
     }
     if (token === "#!fold-case" || token === "#!no-fold-case") {
-      foldcase = !token.includes("#!no-");
+      doFoldcase = !token.includes("#!no-");
       continue;
     }
-    if (foldcase && (
+    if (doFoldcase && (
       token.match(/^(?:[A-Za-z0-9]|[^\x00-\x7f]|[!$%&*+\-./:<=>?@^_~])+$/) ||
       token.match(/#\\(?:(?:[^A-Za-z]|\n)|[A-Za-z](?:[A-Za-z0-9]|[^\x00-\x7f]|[!$%&*+\-./:<=>?@^_~])*)/)
     )) {
-      token = token.toLowerCase(); // Note: no way to "fold" case.
+      token = foldcase(token);
     }
     results.push([token, info]);
   }
