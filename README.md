@@ -140,7 +140,7 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
 
 ## Limitations
 
-  - R7RS standard procedures libraries listed below are not implemented.
+  - R7RS standard libraries listed below are not implemented.
     * (scheme complex)
     * (scheme file)
     * (scheme process-context)

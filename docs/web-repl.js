@@ -4,10 +4,6 @@
 /** @typedef { import("../src/index").Envelope } Envelope */
 /** @typedef { import("../src/index").LISP.Object } LObject */
 /** @typedef { import("../src/index").LISP.Suspend } LSuspend */
-/// <reference path="../types/jquery.terminal.d.ts"/>
-
-// Just an alias to avoid to write console-dot-log.
-var logger = console;
 
 /**  @type {Scheme} */
 var L = window["Scheme"];
@@ -30,12 +26,25 @@ itrp.setBuiltInProcedure(
   }, true)
 );
 
+// Load libraries and create "suspend" object (with envelope).
 /** @type {LSuspend} */
 var suspend;
 try {
   itrp.evalAST(
     L.forms.CallBuiltIn("eval",
-      L.forms.CallBuiltIn("suspend")
+      L.forms.CallBuiltIn("suspend",
+        L.fromJS(["import",
+          ["scheme", "base"],
+          ["scheme", "char"],
+          ["scheme", "lazy"],
+          ["scheme", "inexact"],
+          ["scheme", "time"],
+          ["scheme", "read"],
+          ["scheme", "write"],
+          ["scheme", "case-lambda"],
+          ["scheme", "cxr"],
+        ])
+      )
     )
   );
 } catch (e) {
@@ -44,10 +53,13 @@ try {
   }
 }
 if (!suspend) {
-  throw new Error("No suspend!")
+  throw new Error("No suspend object!");
 }
 
-$("#term").terminal(function (cmd, t) {
+var terminal = $("#term").terminal(function (cmd, t) {
+  if (/^\s*$/.test(cmd)) {
+    return;
+  }
   /** @type {LObject} */
   try {
     var obj = L.parser(cmd);
@@ -69,8 +81,21 @@ $("#term").terminal(function (cmd, t) {
     }
   }
 }, {
-  greetings: `Cumalis Lisp Web REPL`,
+  greetings: "[[b;#FFFFFF;]<<<Welcome to Cumalis Lisp Web REPL>>]\n" +
+    "Standard libraries (base char lazy inexact time read write case-lambda cxr) are already imported.",
   keymap: {
-    "CTRL+C": function () { } // disable the original function.
+    "CTRL+C": function () { } // disable the original functsion.
   }
 });
+
+// Set default font size on the terminal.
+terminal.css("--size", "1.5");
+
+// Connect default output-port to the terminal.
+itrp.setBuiltInPort("//output", {
+  write: function (value) {
+    if (typeof value === "string") {
+      terminal.echo("[[;#07C7ED;]" + value + "]");
+    }
+  }
+}, true);

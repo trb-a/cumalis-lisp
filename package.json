@@ -57,6 +57,7 @@
     "eslint": "^7.29.0",
     "eslint-plugin-jest": "^24.3.6",
     "jest": "^27.0.5",
+    "jquery.terminal": "^2.27.1",
     "rimraf": "^3.0.2",
     "rollup": "^2.52.2",
     "rollup-plugin-babel": "^4.4.0",
