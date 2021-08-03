@@ -1,6 +1,6 @@
 /* eslint-disable jest/no-conditional-expect */
 import fs from "fs";
-import { assert, contentCS, create, defineBuiltInProcedure, forms, fromReferentialJSON, is, isSuspendEnvelope, numberToJSNumber, SuspendEnvelope, suspendValueFromEnvelope, toReferentialJSON } from "../src/utils";
+import { assert, contentCS, create, defineBuiltInProcedure, ExitEnvelope, exitValueFromEnvelope, forms, fromReferentialJSON, is, isExitEnvelope, isSuspendEnvelope, numberToJSNumber, SuspendEnvelope, suspendValueFromEnvelope, toReferentialJSON, uuidv4 } from "../src/utils";
 import { equalQ } from "../src/equivalence";
 import { toJS, writeObject } from "../src/unparser";
 import { Interpreter } from "../src/interpreter";
@@ -9,6 +9,7 @@ import { fromJS } from "../src";
 
 const logger = console; // To avoid to type console dot log.
 const r7rsTest = fs.readFileSync("./__tests__/r7rs.scm").toString();
+const fileTest = fs.readFileSync("./__tests__/file.scm").toString();
 
 // This is for testing serialize/deserialize for every call-frame.
 // Very slow!
@@ -143,18 +144,18 @@ itrp.setBuiltInProcedure(testRound1Proc);
 itrp.setBuiltInProcedure(testBeginProc);
 itrp.setBuiltInProcedure(testEndProc);
 
-test('Results', () => {
+test('R7RS Test', () => {
   try {
     itrp.eval(r7rsTest);
   } catch (e) {
     if (e instanceof Error) {
-      logger.log("R7RSTEST: JS EXCEPTOION", e.name, e.message, "\n", e.stack);
+      logger.log("JS EXCEPTOION", e.name, e.message, "\n", e.stack);
     } else {
       logger.log("ERROR\n", typeof e, e);
     }
     throw e;
   }
-  logger.log(`EXECUTED ${testCount} tests.`)
+  logger.log(`EXECUTED ${testCount} tests. FAILED: ${failCount}`)
   expect(failCount).toBe(0);
 });
 
@@ -203,7 +204,6 @@ test('Defining built-in function / built-in macro example', () => {
 });
 
 test('Suspend / serialize / deserialize / resume and toJS.', () => {
-  // Suspend
   const itrp = new Interpreter(); // Create interpreter.
 
   // Suspend
@@ -233,3 +233,96 @@ test('Suspend / serialize / deserialize / resume and toJS.', () => {
     expect("Here").toBe("Never");
   }
 });
+
+test('Exit / Emergency exit', () => {
+  let flag = 0;
+  const itrp = new Interpreter(); // Create interpreter.
+  itrp.setBuiltInProcedure(defineBuiltInProcedure("set-flag1", [], () => {
+    flag = 1;
+    return ["<undefined>"];
+  }));
+  itrp.setBuiltInProcedure(defineBuiltInProcedure("set-flag2", [], () => {
+    flag = 2;
+    return ["<undefined>"];
+  }));
+
+  let exit: ExitEnvelope | null = null;
+  try {
+    itrp.eval(`
+      (import (scheme process-context))
+      (dynamic-wind
+        (lambda () (set-flag1))
+        (lambda () (exit "EXIT HERE"))
+        (lambda () (set-flag2))
+      )
+    `);
+  } catch (e) {
+    if (isExitEnvelope(e)) {
+      exit = e;
+    } else {
+      throw e;
+    }
+  }
+  expect(flag).toBe(2);
+  if (exit) {
+    expect(toJS(exitValueFromEnvelope(exit))).toBe("EXIT HERE");
+  } else {
+    expect("Here").toBe("Never");
+  }
+
+  try {
+    itrp.eval(`
+      (import (scheme process-context))
+      (dynamic-wind
+        (lambda () (set-flag1))
+        (lambda () (emergency-exit "EMARGENCY HERE"))
+        (lambda () (set-flag2))
+      )
+    `);
+  } catch (e) {
+    if (isExitEnvelope(e)) {
+      exit = e;
+    } else {
+      throw e;
+    }
+  }
+  expect(flag).toBe(1);
+  if (exit) {
+    expect(toJS(exitValueFromEnvelope(exit))).toBe("EMARGENCY HERE");
+  } else {
+    expect("Here").toBe("Never");
+  }
+});
+
+//--------------------------
+//      File test
+//--------------------------
+
+import os from "os";
+
+const tempDir = os.tmpdir();
+// CHECK SANITY
+if (tempDir.length < 10) {
+  throw new Error("Not enough length of tempdir");
+}
+process.env["MY_TEMPDIR"] = tempDir;
+process.env["MY_FILE"] = tempDir + "/" + uuidv4();
+
+test('File Test', () => {
+  failCount = 0;
+  testCount = 0;
+    try {
+    itrp.eval(fileTest);
+  } catch (e) {
+    if (e instanceof Error) {
+      logger.log("JS EXCEPTOION", e.name, e.message, "\n", e.stack);
+    } else {
+      logger.log("ERROR\n", typeof e, e);
+    }
+    throw e;
+  }
+  logger.log(`EXECUTED ${testCount} tests. FAILED: ${failCount}`)
+  expect(failCount).toBe(0);
+});
+
+

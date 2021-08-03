@@ -35,6 +35,8 @@ import InexactLibrary from "./libraries/inexact";
 import CaseLambdaLibrary from "./libraries/case-lambda";
 import CharLibrary from "./libraries/char";
 import CxrLibrary from "./libraries/cxr";
+import ProcessContextLibrary from "./libraries/process-context";
+import FileLibrary from "./libraries/file";
 
 // -------------------------------------------------------
 //                       Consant
@@ -69,6 +71,8 @@ const BuiltInLibraryDefinitions: Record<string, BuiltInLibraryDefinition> = {
   "(scheme case-lambda)": CaseLambdaLibrary,
   "(scheme char)": CharLibrary,
   "(scheme cxr)": CxrLibrary,
+  "(scheme process-context)": ProcessContextLibrary,
+  "(scheme file)": FileLibrary,
 };
 
 const BuiltInJSObjects: [string, LISP.Object][] = [
@@ -440,7 +444,12 @@ export class Interpreter {
       // Initial status.
       if (frame.want === null) {
         if (given) {
-          throw create.Error("internal-error", `Call-frame was given a value without any want. "${frame.want}"`);
+          if (is.MultiValue(given) && given[1].length === 0) {
+            // Special case for exit.
+            given = null;
+          } else {
+            throw create.Error("internal-error", `Call-frame was given a value without any want. "${frame.want}"`);
+          }
         } if (is.Symbol(expr)) {
           // Variable references.
           // If symbol has call-stack reference, the value is taken from the stack's environment.
@@ -656,8 +665,8 @@ export class Interpreter {
           const descend = arrayCS(cont[1]).reverse();
           const dset = new Set(descend);
           const common = ascend.find(s => dset.has(s)) ?? null;
-          const ascendUnder = ascend.slice(0, ascend.indexOf(common as any));
-          const descendUnder = descend.slice(descend.indexOf(common as any) + 1);
+          const ascendUnder = !common ? ascend : ascend.slice(0, ascend.indexOf(common));
+          const descendUnder = !common? descend : descend.slice(descend.indexOf(common) + 1);
           const carg: LISP.Object = args.length === 1 ? args[0] : create.MultiValue(args);
           for (const cs of ascendUnder) {
             const after = contentCS(cs).after;

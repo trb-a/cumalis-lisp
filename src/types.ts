@@ -97,6 +97,7 @@ export declare namespace LISP {
   type SpecialObject = Suspend | JSPromiseContinuation | CallStack | Stack<any, any>;
   type Suspend = [type: "#SUSPEND#", continuation: Continuation, value: Object];
   type JSPromiseContinuation = [type: "#JS-PROMISE-CONTINUATION#", continuation: Continuation, jsPromise: | JSPromise<any> | PromiseLike<any>, status: "pending" | "fulfilled" | "rejected"];
+  type Exit = [type: "#EXIT#", value: Object | null];
 
   // Tokenizing, Parsing, AST
   type Token = string;

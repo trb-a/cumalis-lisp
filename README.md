@@ -24,6 +24,7 @@ $ npm install cumalis-lisp
   * let-values / values.
   * limited support for syntax-rules (see Limitations).
   * quasiquote.
+  * nested multiline comments.
   * etc.
 - Other standard libraries implemented:
   * (scheme read)
@@ -34,6 +35,8 @@ $ npm install cumalis-lisp
   * (scheme case-lambda)
   * (scheme char)
   * (scheme cxr)
+  * (scheme process-context)
+  * (scheme file)
 - Proper tail recursion. (tail call optimization)
 - Javascript interfaces
   * Adding built-in procedures.
@@ -74,7 +77,7 @@ const ret = itrp.eval(`
 const num = toJS(ret); // returns 2.
 ```
 
-### Defining built-in function / built-in macro
+### Defining built-in procedures / built-in macros
 
 ```typescript
 const itrp = new Interpreter(); // Create interpreter.
@@ -134,6 +137,32 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
 
 ```
 
+### Using files
+
+To handle files on Node.js, "fs" object must be set as option when you
+create a Interpreter instance.
+
+```Typescript
+  import fs from "fs";
+  const itrp = new Interpreter({fs}); // <= set "fs" object as option.
+  itrp.eval(`
+    (import (scheme file))
+    (if (file-exists? "some-file.txt")
+      (with-input-from-file "some-file.txt"
+        (define x (read-line))
+        ...
+    (with-output-to-file "some-other-file.txt"
+      (lambda ()
+        (write-char #\a)
+        (write-string "ABC")
+        (newline)
+        ...
+    (delete-file "some-file.txt")
+  `);
+```
+
+Note: If you want to serialize / deserialize suspended continuations, open files status (seek position, open/close status, etc) can't be recovered when you deserialize / resume. It will cause unexpected behaviour. Be sure to close files before serialization.
+
 ## R7RS Specification
 
 [Revised7 Report on the Algorithmic Language Scheme](https://github.com/johnwcowan/r7rs-spec/blob/errata/spec/r7rs.pdf)
@@ -142,8 +171,6 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
 
   - R7RS standard libraries listed below are not implemented.
     * (scheme complex)
-    * (scheme file)
-    * (scheme process-context)
     * (scheme eval)
     * (scheme repl)
     * (scheme r5rs)
@@ -162,10 +189,15 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
     * Only lists are supported for now. No vector rules.
     * Only flat patterns are supported. No nested patterns.
     * Improper list patterns are not supported.
-  - (eqv? "aaa" "aaa") returns #t. (like Javascript's "aaa" === "aaa" returns true).
   - Strings doesn't handle surrogate pairs correctly. (Works like Javascript string).
-  - toReferentialJSON / fromReferentialJSON don't respect "toJSON" property of class instances. If you want to include class instances in serialization, please consider other serializers like js-yaml, etc.
+  - About file library.
+    * char-ready? u8-ready? raise errors for file ports. Because Node.js doesn't seem to have any ftell(3) equivalent. read-char read-line etc. may block until complete reading.
 
+## Notes
+  - (eqv? "aaa" "aaa") returns #t. (like Javascript's "aaa" === "aaa" returns true).
+  - toReferentialJSON / fromReferentialJSON don't respect "toJSON" property of class instances. If you want to include class instances in serialization, please consider other serializers like js-yaml, etc.
+  - exit / emergency-exit does't do process.exit() but throws an Envelope object that isExitEnvelope() returns true, so that users can catch it and  perform proper finalizations.
+ 
 ## TODOs / Future plans
 
   - Better documentation (especially Javascript interfaces more).

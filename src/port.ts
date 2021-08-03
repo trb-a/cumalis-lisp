@@ -85,7 +85,7 @@ const outputPortOpenQ = defineBuiltInProcedure("output-port-open?", [
 
 // (open-binary-output-file string) file library procedure
 
-const closePort = defineBuiltInProcedure("close-port", [
+export const closePort = defineBuiltInProcedure("close-port", [
   { name: "port" }
 ], ({ port }, itrp) => {
   assert.Port(port);

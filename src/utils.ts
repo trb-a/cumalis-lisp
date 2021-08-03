@@ -59,6 +59,7 @@ export const updateCS = (cs: LISP.CallStack, overwrite: Partial<LISP.CallStack[1
   return cs;
 }
 
+// Interpreter.evalAST/exit-emergency use this.
 export const createCS = (expr: LISP.Object): LISP.CallStack => {
   const env = { static: create.StaticNS({}, null), dynamic: create.DynamicNS({}, null) };
   return ["#CALL-STACK#", {
@@ -157,6 +158,7 @@ export const create = {
   // Specials
   Suspend: (...args: ExceptFirst<LISP.Suspend>): LISP.Suspend => ["#SUSPEND#", ...args],
   JSPromiseContinuation: (...args: ExceptFirst<LISP.JSPromiseContinuation>): LISP.JSPromiseContinuation => ["#JS-PROMISE-CONTINUATION#", ...args],
+  Exit: (...args: ExceptFirst<LISP.Exit>): LISP.Exit => ["#EXIT#", ...args],
   // Namespaces
   StaticNS: (...args: ExceptFirst<LISP.Env["static"]>): LISP.Env["static"] => ["#STATIC-NS-STACK#", ...args],
   DynamicNS: (...args: ExceptFirst<LISP.Env["dynamic"]>): LISP.Env["dynamic"] => ["#DYNAMIC-NS-STACK#", ...args],
@@ -239,6 +241,7 @@ export const is = {
   // Specials
   Suspend: (o: unknown): o is LISP.Suspend => (o instanceof Array && o[0] === "#SUSPEND#"),
   JSPromiseContinuation: (o: unknown): o is LISP.JSPromiseContinuation => (o instanceof Array && o[0] === "#JS-PROMISE-CONTINUATION#"),
+  Exit: (o: unknown): o is LISP.Exit => (o instanceof Array && o[0] === "#EXIT#"),
   CallStack: (o: unknown): o is LISP.CallStack => (o instanceof Array && o[0] === "#CALL-STACK#"),
   SpecialObject: (o: unknown): o is LISP.SpecialObject => (o instanceof Array && typeof o[0] === "string" && /^#.+#$/.test(o[0])),
   // Others
@@ -346,15 +349,15 @@ export const assert: {
 };
 
 // Special assertions
-export const assertNonNull: <T = unknown>(v: T) => asserts v is NonNullable<T> = (v) => {
+export const assertNonNull: <T = unknown>(v: T,  message?: string) => asserts v is NonNullable<T> = (v, message) => {
   if (v === undefined || v === null) {
-    throw create.Error("program-error", "Required object.");
+    throw create.Error("program-error", message ?? "Required object.");
   }
 }
 
-export const assertArray: (v: unknown) => asserts v is Array<any> = (v) => {
+export const assertArray: (v: unknown,  message?: string) => asserts v is Array<any> = (v, message) => {
   if (!(v instanceof Array)) {
-    throw create.Error("program-error", "An array is expected.");
+    throw create.Error("program-error", message ?? "An array is expected.");
   }
 }
 
@@ -364,6 +367,73 @@ export const isDictionary = (o: unknown): o is Dictionary<any> => (
 
 // export const isOneOf = <T extends readonly any[]>(o: unknown, arr: T): o is T[number] => arr.includes(o);
 
+// Envelope
+
+export const isEnvelope = (
+  o: (any),
+): o is Envelope => (
+  !!o && typeof o === "object" &&
+  o.language === PACKAGE_NAME &&
+  !!o.version && (is.Object(o.content) || is.SpecialObject(o.content))
+);
+
+export const isCurrentVersionEnvelope = (
+  o: (any),
+): o is Envelope => (
+  !!o && typeof o === "object" &&
+  o.language === PACKAGE_NAME &&
+  o.version === PACKAGE_VERSION &&
+  (is.Object(o.content) || is.SpecialObject(o.content))
+);
+
+export type SuspendEnvelope = Envelope & { content: LISP.Suspend };
+
+export const isSuspendEnvelope = (
+  o: (any)
+): o is SuspendEnvelope => (
+  isEnvelope(o) && is.Suspend(o.content)
+);
+
+export const suspendValueFromEnvelope = (
+  envelope:  SuspendEnvelope
+): LISP.Object => (
+  envelope.content[2]
+);
+
+export type JSPromiseContinuationEnvelope = Envelope & { content: LISP.JSPromiseContinuation };
+
+export const isJSPromiseContinuationEnvelope = (
+  o: (any)
+): o is JSPromiseContinuationEnvelope => (
+  isEnvelope(o) && is.JSPromiseContinuation(o.content)
+);
+export const isPromiseEnvelope = isJSPromiseContinuationEnvelope; // Alias
+
+export const promiseFromEnvelope = (
+  envelope:  JSPromiseContinuationEnvelope
+): Promise<any> | PromiseLike<any> => (
+  envelope.content[2]
+);
+
+export const promiseStatusFromEnvelope = (
+  envelope:  SuspendEnvelope
+  ): "pending" | "fulfilled" | "rejected" => (
+  envelope.content[3]
+);
+
+export type ExitEnvelope = Envelope & { content: LISP.Exit };
+
+export const isExitEnvelope = (
+  o: (any)
+): o is ExitEnvelope => (
+  isEnvelope(o) && is.Exit(o.content)
+);
+
+export const exitValueFromEnvelope = (
+  envelope:  ExitEnvelope
+): LISP.Object | null => (
+  envelope.content[1]
+);
 
 // Other utilities.
 
@@ -614,37 +684,6 @@ export const formalsToParameters = (formals: LISP.Object): [LISP.ProcedureParame
     return [[], { name: formals[3] ?? formals[1], type: "variadic" }];
   }
 }
-
-export const isEnvelope = (
-  o: (any),
-): o is Envelope => (
-  !!o && typeof o === "object" &&
-  o.language === PACKAGE_NAME &&
-  !!o.version && (is.Object(o.content) || is.SpecialObject(o.content))
-);
-
-export const isCurrentVersionEnvelope = (
-  o: (any),
-): o is Envelope => (
-  !!o && typeof o === "object" &&
-  o.language === PACKAGE_NAME &&
-  o.version === PACKAGE_VERSION &&
-  (is.Object(o.content) || is.SpecialObject(o.content))
-);
-
-export type SuspendEnvelope = Envelope & { content: LISP.Suspend };
-
-export const isSuspendEnvelope = (
-  o: (any)
-): o is SuspendEnvelope => (
-  isEnvelope(o) && is.Suspend(o.content)
-);
-
-export const suspendValueFromEnvelope = (
-  envelope:  SuspendEnvelope
-): LISP.Object => (
-  envelope.content[2]
-);
 
 // Serialize an object tree to JSON with cyclic and non-cyclic reference.
 // There are 3 steps.

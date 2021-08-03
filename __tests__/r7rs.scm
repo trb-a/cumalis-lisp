@@ -12,12 +12,12 @@
 ;X        (scheme complex)
         (scheme time)
 ;X[Some libraries are not implemented.]
-;X        (scheme file)
+        (scheme file)
         (scheme read)
         (scheme write)
 ;X[Some libraries are not implemented.]
 ;X        (scheme eval)
-;X        (scheme process-context)
+        (scheme process-context)
         (scheme case-lambda)
 ;X[Some libraries are not implemented.]
 ;X        (scheme r5rs)
@@ -1663,9 +1663,8 @@
 
 (test #f
     (file-error? (guard (exn (else exn)) (error "BOOM!"))))
-;X[file library]
-;X(test #t
-;X    (file-error? (guard (exn (else exn)) (open-input-file " no such file "))))
+(test #t
+    (file-error? (guard (exn (else exn)) (open-input-file " no such file "))))
 
 (test #f
     (read-error? (guard (exn (else exn)) (error "BOOM!"))))
@@ -2283,23 +2282,21 @@
 
 ;; 6.14 System interface
 
-;X[load/process-context/file library]
-;X ;; (test "/usr/local/bin:/usr/bin:/bin" (get-environment-variable "PATH"))
-;X
-;X (test #t (string? (get-environment-variable "PATH")))
-;X
-;X ;; (test '(("USER" . "root") ("HOME" . "/")) (get-environment-variables))
-;X
-;X (let ((env (get-environment-variables)))
-;X   (define (env-pair? x)
-;X     (and (pair? x) (string? (car x)) (string? (cdr x))))
-;X   (define (all? pred ls)
-;X     (or (null? ls) (and (pred (car ls)) (all? pred (cdr ls)))))
-;X   (test #t (list? env))
-;X   (test #t (all? env-pair? env)))
-;X
-;X (test #t (list? (command-line)))
-;X
+;; (test "/usr/local/bin:/usr/bin:/bin" (get-environment-variable "PATH"))
+(test #t (string? (get-environment-variable "PATH")))
+
+;; (test '(("USER" . "root") ("HOME" . "/")) (get-environment-variables))
+
+(let ((env (get-environment-variables)))
+  (define (env-pair? x)
+    (and (pair? x) (string? (car x)) (string? (cdr x))))
+  (define (all? pred ls)
+    (or (null? ls) (and (pred (car ls)) (all? pred (cdr ls)))))
+  (test #t (list? env))
+  (test #t (all? env-pair? env)))
+
+(test #t (list? (command-line)))
+
 (test #t (real? (current-second)))
 (test #t (inexact? (current-second)))
 (test #t (exact? (current-jiffy)))
@@ -2308,18 +2305,20 @@
 (test #t (list? (features)))
 (test #t (and (memq 'r7rs (features)) #t))
 
-;X[load/process-context/file library]
-;X ;(test #t (file-exists? "."))
-;X (test #f (file-exists? " no such file "))
-;X
-;X (test #t (file-error?
-;X           (guard (exn (else exn))
-;X             (delete-file " no such file "))))
-;X
-;X (test-end)
+(test #t (file-exists? "."))
+(test #f (file-exists? " no such file "))
+(test #t (file-error?
+          (guard (exn (else exn))
+            (delete-file " no such file "))))
+
+; Note: test for emergency-exit / exit is in index.test.ts
+
+(test-end)
 
 
 (test-begin "X Others")
+
+; lacking tests
 
 (test 10 (/ 100 10))
 (test 100 (/ 100 1))
@@ -2330,6 +2329,8 @@
 (test 3 (floor-quotient 10 3))
 (test -3 (quotient -10 3))
 (test -4 (floor-quotient -10 3))
+
+; cxr library
 
 (test 1 (caar '((1 . 2) . (3 . 4))))
 (test 2 (cdar '((1 . 2) . (3 . 4))))
@@ -2359,6 +2360,19 @@
 (test 14 (cdaddr '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
 (test 15 (cadddr '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
 (test 16 (cddddr '((((1 . 2) . (3 . 4)) . ((5 . 6) . (7 . 8))) . (((9 . 10) . (11 . 12)) . ((13 . 14) . (15 . 16))))))
+
+;X => file.scm
+;X call-with-input-file
+;X call-with-output-file
+;X with-input-from-file
+;X with-output-to-file
+;X open-input-file
+;X open-output-file
+;X open-binary-input-file
+;X open-binary-output-file
+;X file-exists?
+;X delete-file
+;X getting value from system environment.
 
 (test-end)
 
