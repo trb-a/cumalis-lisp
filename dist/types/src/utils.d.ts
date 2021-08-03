@@ -42,6 +42,7 @@ export declare const create: {
     List: (...args: LISP.Object[]) => LISP.List;
     Suspend: (continuation: LISP.IContinuation, value: LISP.Object) => LISP.Suspend;
     JSPromiseContinuation: (continuation: LISP.IContinuation, jsPromise: PromiseLike<any> | import("./types").JSPromise<any>, status: "pending" | "fulfilled" | "rejected") => LISP.JSPromiseContinuation;
+    Exit: (value: LISP.Object | null) => LISP.Exit;
     StaticNS: (args_0: Dictionary<LISP.Object>, args_1: Stack<"#STATIC-NS-STACK#", Dictionary<LISP.Object>> | null) => LISP.Env["static"];
     DynamicNS: (args_0: Dictionary<LISP.Object>, args_1: Stack<"#DYNAMIC-NS-STACK#", Dictionary<LISP.Object>> | null) => LISP.Env["dynamic"];
     HandlerStack: (args_0: LISP.Procedure, args_1: Stack<"#HANDLER-STACK#", LISP.Procedure> | null) => Stack<"#HANDLER-STACK#", LISP.Procedure>;
@@ -104,6 +105,7 @@ export declare const is: {
     Objects: (o: unknown) => o is LISP.Object[];
     Suspend: (o: unknown) => o is LISP.Suspend;
     JSPromiseContinuation: (o: unknown) => o is LISP.JSPromiseContinuation;
+    Exit: (o: unknown) => o is LISP.Exit;
     CallStack: (o: unknown) => o is LISP.CallStack;
     SpecialObject: (o: unknown) => o is LISP.SpecialObject;
     Dictionary: (o: unknown) => o is Dictionary<any>;
@@ -144,9 +146,28 @@ export declare const assert: {
     RealNumbers: (vs: any, message?: string | undefined) => asserts vs is LISP.RealNumber[];
     IntegerNumbers: (vs: any, message?: string | undefined) => asserts vs is LISP.RealNumber[];
 };
-export declare const assertNonNull: <T = unknown>(v: T) => asserts v is NonNullable<T>;
-export declare const assertArray: (v: unknown) => asserts v is Array<any>;
+export declare const assertNonNull: <T = unknown>(v: T, message?: string) => asserts v is NonNullable<T>;
+export declare const assertArray: (v: unknown, message?: string) => asserts v is Array<any>;
 export declare const isDictionary: (o: unknown) => o is Dictionary<any>;
+export declare const isEnvelope: (o: (any)) => o is Envelope;
+export declare const isCurrentVersionEnvelope: (o: (any)) => o is Envelope;
+export declare type SuspendEnvelope = Envelope & {
+    content: LISP.Suspend;
+};
+export declare const isSuspendEnvelope: (o: (any)) => o is SuspendEnvelope;
+export declare const suspendValueFromEnvelope: (envelope: SuspendEnvelope) => LISP.Object;
+export declare type JSPromiseContinuationEnvelope = Envelope & {
+    content: LISP.JSPromiseContinuation;
+};
+export declare const isJSPromiseContinuationEnvelope: (o: (any)) => o is JSPromiseContinuationEnvelope;
+export declare const isPromiseEnvelope: (o: (any)) => o is JSPromiseContinuationEnvelope;
+export declare const promiseFromEnvelope: (envelope: JSPromiseContinuationEnvelope) => Promise<any> | PromiseLike<any>;
+export declare const promiseStatusFromEnvelope: (envelope: SuspendEnvelope) => "pending" | "fulfilled" | "rejected";
+export declare type ExitEnvelope = Envelope & {
+    content: LISP.Exit;
+};
+export declare const isExitEnvelope: (o: (any)) => o is ExitEnvelope;
+export declare const exitValueFromEnvelope: (envelope: ExitEnvelope) => LISP.Object | null;
 export declare const hasOwnProperty: (v: PropertyKey) => boolean;
 export declare const listToArray: (list: LISP.List) => LISP.Object[];
 export declare const pairToArrayWithEnd: (pair: LISP.IPair) => [LISP.Object[], LISP.Object];
@@ -163,13 +184,6 @@ export declare const wrapBuiltInProcedure: ({ name, parameters, body, isMacro, h
 export declare const stringify: (value: (any), maxlength?: number, maxdepth?: number) => string;
 export declare const arrayShallowEquals: (a1: any[], a2: any[]) => boolean;
 export declare const formalsToParameters: (formals: LISP.Object) => [LISP.ProcedureParameter[], LISP.ProcedureParameter | null];
-export declare const isEnvelope: (o: (any)) => o is Envelope;
-export declare const isCurrentVersionEnvelope: (o: (any)) => o is Envelope;
-export declare type SuspendEnvelope = Envelope & {
-    content: LISP.Suspend;
-};
-export declare const isSuspendEnvelope: (o: (any)) => o is SuspendEnvelope;
-export declare const suspendValueFromEnvelope: (envelope: SuspendEnvelope) => LISP.Object;
 export declare const toReferentialJSON: (tree: (any), referenceTag: string) => string;
 export declare const fromReferentialJSON: (json: string, referenceTag: string) => any;
 export declare const foldcase: (str: string) => string;

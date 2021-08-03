@@ -40,17 +40,20 @@ export {
   fromReferentialJSON,
   isEnvelope,
   isCurrentVersionEnvelope,
-  SuspendEnvelope,
   isSuspendEnvelope,
   suspendValueFromEnvelope,
-  JSPromiseContinuationEnvelope,
   isJSPromiseContinuationEnvelope,
   isPromiseEnvelope,
   promiseFromEnvelope,
   promiseStatusFromEnvelope,
-  ExitEnvelope,
   isExitEnvelope,
   exitValueFromEnvelope,
   transferCS,
   forkCS,
+} from "./utils";
+
+export type {
+  SuspendEnvelope,
+  JSPromiseContinuationEnvelope,
+  ExitEnvelope,
 } from "./utils";

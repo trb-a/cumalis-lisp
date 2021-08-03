@@ -1,4 +1,5 @@
 import { LISP } from "./types";
+export declare const closePort: import("./interpreter").BuiltInProcedureDefinition<"port", ({ port }: Partial<Record<"port", LISP.Object | LISP.Object[] | null>>, itrp: import("./interpreter").Interpreter | undefined) => LISP.IBoolean | ["<undefined>"]>;
 export declare const readChar: import("./interpreter").BuiltInProcedureDefinition<"port", ({ port }: Partial<Record<"port", LISP.Object | LISP.Object[] | null>>, itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => LISP.Character | LISP.EndOfFile>;
 export declare const writeString: import("./interpreter").BuiltInProcedureDefinition<"end" | "start" | "str" | "port", ({ str, port, start, end }: Partial<Record<"end" | "start" | "str" | "port", LISP.Object | LISP.Object[] | null>>, itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => ["<undefined>"]>;
 export declare const procedures: {

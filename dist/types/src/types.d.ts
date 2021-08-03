@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 export declare type ExceptFirst<F> = F extends [arg0: any, ...rest: infer R] ? R : never;
 export declare type Dictionary<T = any> = {
     [x: string]: T;
@@ -115,7 +114,7 @@ export declare namespace LISP {
     type RealNumber = INumber & {
         1: number;
     };
-    type SpecialObject = Suspend | JSPromiseContinuation | Exit | CallStack | Stack<any, any>;
+    type SpecialObject = Suspend | JSPromiseContinuation | CallStack | Stack<any, any>;
     type Suspend = [type: "#SUSPEND#", continuation: Continuation, value: Object];
     type JSPromiseContinuation = [type: "#JS-PROMISE-CONTINUATION#", continuation: Continuation, jsPromise: JSPromise<any> | PromiseLike<any>, status: "pending" | "fulfilled" | "rejected"];
     type Exit = [type: "#EXIT#", value: Object | null];
