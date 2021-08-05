@@ -32,7 +32,7 @@ const stringLength = defineBuiltInProcedure("string-length", [
   { name: "str" }
 ], ({ str }) => {
   assert.String(str);
-  return create.Number(str[1].length);
+  return create.Number(Array.from(str[1]).length);
 });
 
 const stringRef = defineBuiltInProcedure("string-ref", [
@@ -41,7 +41,7 @@ const stringRef = defineBuiltInProcedure("string-ref", [
 ], ({ str, k }) => {
   assert.String(str);
   assert.IntegerNumber(k);
-  const v = str[1][k[1]];
+  const v = Array.from(str[1])[k[1]];
   if (!v) {
     throw create.Error("out-of-range", `The specified string doesn't have character with index ${k[1]}.`);
   }
@@ -56,7 +56,10 @@ const stringSetD = defineBuiltInProcedure("string-set!", [
   assert.String(str);
   assert.IntegerNumber(k);
   assert.Character(char);
-  str[1] = str[1].slice(0, k[1]) + char[1] + str[1].slice(k[1] + char[1].length);
+  const arr = Array.from(str[1]);
+  const head = arr.slice(0, k[1]);
+  const tail = arr.slice(k[1] + 1);
+  str[1] = [...head, char[1], ...tail].join("");
   return ["<undefined>"];
 });
 
@@ -143,10 +146,10 @@ const substring = defineBuiltInProcedure("substring", [
   assert.String(str);
   assert.IntegerNumber(start);
   assert.IntegerNumber(end);
-  if (str[1].length === 0) {
-    return create.String("", false);
-  }
-  return create.String(str[1].slice(start[1], end[1]), false);
+  return create.String(
+    Array.from(str[1]).slice(start[1], end[1]).join(""),
+    false
+  );
 });
 
 const stringAppend = defineBuiltInProcedure("string-append", [
@@ -162,14 +165,14 @@ const stringToList = defineBuiltInProcedure("string->list", [
   { name: "end", type: "optional" },
 ], ({ str, start, end }) => {
   assert.String(str);
-  const s = str[1];
+  const arr = Array.from(str[1]);
   const st = is.Number(start) ? start[1] : 0;
-  const ed = is.Number(end) ? end[1] : s.length;
+  const ed = is.Number(end) ? end[1] : arr.length;
   if (typeof st !== "number" || !Number.isInteger(st) || typeof ed !== "number" || !Number.isInteger(ed)) {
     throw create.Error("domain-error", "Index must be integer.");
   }
   return create.List(
-    ...s.slice(st, ed).split("").map(v => create.Character(v))
+    ...arr.slice(st, ed).map(v => create.Character(v))
   );
 });
 
@@ -188,13 +191,13 @@ const stringCopy = defineBuiltInProcedure("string-copy", [
   { name: "end", type: "optional" },
 ], ({ str, start, end }) => {
   assert.String(str);
-  const s = str[1];
+  const arr = Array.from(str[1]);
   const st = is.Number(start) ? start[1] : 0;
-  const ed = is.Number(end) ? end[1] : s.length;
+  const ed = is.Number(end) ? end[1] : arr.length;
   if (typeof st !== "number" || !Number.isInteger(st) || typeof ed !== "number" || !Number.isInteger(ed)) {
     throw create.Error("domain-error", "Index must be integer.");
   }
-  return create.String(s.slice(st, ed), false);
+  return create.String(arr.slice(st, ed).join(""), false);
 });
 
 const stringCopyD = defineBuiltInProcedure("string-copy!", [
@@ -207,20 +210,23 @@ const stringCopyD = defineBuiltInProcedure("string-copy!", [
   assert.String(to);
   assert.IntegerNumber(at);
   assert.String(from);
-  const s = from[1];
+  const fromArr = Array.from(from[1]);
+  const toArr = Array.from(to[1]);
   const st = is.Number(start) ? start[1] : 0;
-  const ed = is.Number(end) ? end[1] : s.length;
+  const ed = is.Number(end) ? end[1] : fromArr.length;
   if (typeof st !== "number" || !Number.isInteger(st) || typeof ed !== "number" || !Number.isInteger(ed)) {
     throw create.Error("domain-error", "Index must be integer.");
   }
-  if (at[1] < 0 || at[1] >= s.length) {
+  if (at[1] < 0 || at[1] >= fromArr.length) {
     throw create.Error("out-of-range", "Index is out of range.");
   }
-  if ((s.length - at[1]) < ed - st) {
+  if ((fromArr.length - at[1]) < ed - st) {
     throw create.Error("out-of-range", "Index is out of range.");
   }
-  const str = s.slice(st, ed);
-  to[1] = to[1].slice(0, at[1]) + str + to[1].slice(at[1] + str.length);
+  const slice = fromArr.slice(st, ed);
+  const head = toArr.slice(0, at[1]);
+  const tail = toArr.slice(at[1] + slice.length);
+  to[1] = [...head, ...slice, ...tail].join("");
   return ["<undefined>"];
 });
 
@@ -232,17 +238,17 @@ const stringFillD = defineBuiltInProcedure("string-fill!", [
 ], ({ str, fill, start, end }) => {
   assert.String(str);
   assert.Character(fill);
-  const s = str[1];
+  const arr = Array.from(str[1]);
   const st = is.Number(start) ? start[1] : 0;
-  const ed = is.Number(end) ? end[1] : s.length;
+  const ed = is.Number(end) ? end[1] : arr.length;
   if (typeof st !== "number" || !Number.isInteger(st) || typeof ed !== "number" || !Number.isInteger(ed)) {
     throw create.Error("domain-error", "Index must be integer.");
   }
-  const replacee = s.slice(st, ed);
-  // "-----", "x", 1, 2
-  // "-x---"
-  str[1] = str[1].slice(0, st) + fill[1].repeat(replacee.length) + str[1].slice(ed);
-  return str;
+  const slice = arr.slice(st, ed);
+  const head = arr.slice(0, st);
+  const tail = arr.slice(ed);
+  str[1] = [...head, ...fill[1].repeat(slice.length), ...tail].join("");
+  return ["<undefined>"];
 });
 
 export const procedures = {

@@ -842,7 +842,7 @@ const foldcaseMap: Record<string, string> = {
   "\u{ABB9}": "\u{13E9}", "\u{ABBA}": "\u{13EA}", "\u{ABBB}": "\u{13EB}", "\u{ABBC}": "\u{13EC}",
   "\u{ABBD}": "\u{13ED}", "\u{ABBE}": "\u{13EE}",
 };
-const foldcaseRe = new RegExp("[" + Object.keys(foldcaseMap).join("") + "]", "g");
+const foldcaseRe = new RegExp("[" + Object.keys(foldcaseMap).join("") + "]", "gu");
 export const foldcase = (str: string): string => {
   return str.replace(foldcaseRe, c => foldcaseMap[c as any]).toLowerCase();
 }

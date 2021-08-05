@@ -39,6 +39,7 @@ import ProcessContextLibrary from "./libraries/process-context";
 import FileLibrary from "./libraries/file";
 import EvalLibrary from "./libraries/eval";
 import ReplLibrary from "./libraries/repl";
+import LoadLibrary from "./libraries/load";
 import R5RSLibrary from "./libraries/r5rs";
 
 // -------------------------------------------------------
@@ -78,6 +79,7 @@ const BuiltInLibraryDefinitions: Record<string, BuiltInLibraryDefinition> = {
   "(scheme file)": FileLibrary,
   "(scheme eval)": EvalLibrary,
   "(scheme repl)": ReplLibrary,
+  "(scheme load)": LoadLibrary,
   "(scheme r5rs)": R5RSLibrary,
 };
 
@@ -101,7 +103,6 @@ export type InterpreterOptions = {
   fs?: typeof NodeFS_NS; // Node.js's "fs" module.
   beforeExecute?: (stack: LISP.CallStack, value: LISP.Object | null) => [stack: LISP.CallStack, value: LISP.Object] | undefined,
   afterExecute?: (next: LISP.CallStack | null, result: LISP.Object | null, current: LISP.CallStack, value: LISP.Object | null) => void,
-  toplevelDepth?: number, // Change the depth of stack to think as toplevel. REPL may change this. Default: 1.
 };
 
 // Note: Functions that doesn't need itrp & stack can be called directly.

@@ -325,4 +325,29 @@ test('File Test', () => {
   expect(failCount).toBe(0);
 });
 
+//--------------------------
+//    (scheme load) test
+//--------------------------
 
+
+test('Load Test', () => {
+  const tempFilename = tempDir.replace(/\\/g, "/") + "/" + uuidv4();
+  const data = "(+ 100 200)";
+  fs.writeFileSync(tempFilename, data);
+  try {
+    // Note: Return value of (load ...) is not defined R7RS.
+    expect(toJS(itrp.eval(`
+      (import (scheme load))
+      (load "${tempFilename}")
+    `))).toBe(300);
+  } catch (e) {
+    if (e instanceof Error) {
+      logger.log("JS EXCEPTOION", e.name, e.message, "\n", e.stack);
+    } else {
+      logger.log("ERROR\n", typeof e, e);
+    }
+    throw e;
+  } finally {
+    fs.unlinkSync(tempFilename);
+  }
+});

@@ -138,13 +138,13 @@ const stringToUtf8 = defineBuiltInProcedure("string->utf8", [
   { name: "end", type: "optional" },
 ], ({ str, start, end }) => {
   assert.String(str);
-  const s = str[1];
+  const arr = Array.from(str[1]);
   const st = is.Number(start) ? start[1] : 0;
-  const ed = is.Number(end) ? end[1] : s.length;
+  const ed = is.Number(end) ? end[1] : arr.length;
   if (typeof st !== "number" || !Number.isInteger(st) || typeof ed !== "number" || !Number.isInteger(ed)) {
     throw create.Error("domain-error", "Index must be integer.");
   }
-  const u8arr = new TextEncoder().encode(s.slice(st, ed));
+  const u8arr = new TextEncoder().encode(arr.slice(st, ed).join(""));
   return create.ByteVector(Array.from(u8arr), false);
 });
 

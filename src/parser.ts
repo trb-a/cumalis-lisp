@@ -44,6 +44,7 @@ export const SpecialCharacters = {
 export type ParserOptions = {
   removeLineInfo?: boolean,
   extended?: boolean,
+  filename?: string,
 };
 
 // ------------------------------------------------
@@ -333,7 +334,7 @@ export const fromJS = (
 // Tokenize and parse a program (s-expressions) and build a AST with a root of "begin"
 export const fromProgramToAST = (src: string, options?: ParserOptions): LISP.AST => {
   // Tokenize
-  const tokens = fromStringToTokens(src);
+  const tokens = fromStringToTokens(src, options?.filename);
   // Build a structure of tokens according to parentheses.
   const [trees, rest] = fromTokensToTokenTrees(tokens);
   if (rest.length > 0) {

@@ -5,6 +5,8 @@
 import { LISP } from "./types";
 import { defineBuiltInProcedure, assert, create, is, forms, assertNonNull, contentCS } from "./utils";
 
+const fsMessage = `"fs" is not set. To use filesystems, import/require "fs" and set it on Interpreter's constructor parameter.`;
+
 const callWithPort = defineBuiltInProcedure("call-with-port", [
   { name: "port" },
   { name: "proc" }
@@ -227,25 +229,37 @@ export const readChar = defineBuiltInProcedure("read-char", [
   }
   let ret: string | number | null | undefined = undefined;
   if (port[5].length > 0) {
-    ret = port[5][0];
-    port[5] = port[5].slice(1);
+    // Note: It is assumed that there isn't half surrogate pair.
+    if (/^[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(port[5])) { // surrogate pair
+      ret = port[5].slice(0, 2);
+      port[5] = port[5].slice(2);
+    } else {
+      ret = port[5].slice(0, 1);
+      port[5] = port[5].slice(1);
+    }
   } else if (port[1] === "built-in") {
     const bip = itrp?.getBuiltInPort(port[2]);
     ret = bip?.read?.("character", null);
   } else if (port[1] === "string") {
-    if (port[2].length > 0) {
-      ret = port[2][0];
-      port[2] = port[2].slice(1);
-    } else {
+    // Note: the string might be very long.
+    // Don't convert the string to Array using Array.from.
+    if (port[2].length === 0) {
       ret = null;
+    } else if (/^[\uD800-\uDBFF][\uDC00-\uDFFF]/.test(port[2])) { // surrogate pair
+      ret = port[2].slice(0, 2);
+      port[2] = port[2].slice(2);
+    } else {
+      ret = port[2].slice(0, 1);
+      port[2] = port[2].slice(1);
     }
-    // } else if (port[1] === "bytevector") {
-    //   // Not a text port
+  // } else if (port[1] === "bytevector") {
+  //   // Not a text port
   } else if (port[1] === "file") {
     if (!itrp?.fs) {
-      throw create.Error("read-error", "No Interpreter or fs object.");
+      throw create.Error("read-error", fsMessage);
     }
     // Try to read a complete UTF-8 character.
+    // Note: this may block!
     const buffer = Buffer.alloc(4);
     for (let i = 0; ; i++) {
       // Note: blocks until read complete according to the Node.js document.
@@ -311,11 +325,21 @@ const readLine = defineBuiltInProcedure("read-line", [
   }
   let line = "";
   for (; ;) {
-    const ret = readChar.body({ port }, itrp, stack) as LISP.Character;
+    const ret = readChar.body({ port }, itrp, stack);
     if (is.EndOfFile(ret)) {
       if (line === "") {
         return ret;
       } else {
+        return create.String(line, false);
+      }
+    } else if (ret[1] === "\r") {
+      const next = readChar.body({ port }, itrp, stack);
+      if (is.EndOfFile(next)) {
+        return create.String(line, false);
+      } else if (next[1] === "\n") {
+        return create.String(line, false);
+      } else {
+        port[5] = typeof port[5] === "string" ? next[1] + port[5] : next[1];
         return create.String(line, false);
       }
     } else if (ret[1] === "\n") {
@@ -443,7 +467,7 @@ const readU8 = defineBuiltInProcedure("read-u8", [
     }
   } else if (port[1] === "file") {
     if (!itrp?.fs) {
-      throw create.Error("read-error", "No Interpreter or fs object.");
+      throw create.Error("read-error", fsMessage);
     }
     const buffer = Buffer.alloc(1);
     const bytes = itrp.fs.readSync(port[2], buffer);
@@ -513,7 +537,7 @@ const u8ReadyQ = defineBuiltInProcedure("u8-ready?", [
     return create.Boolean(true); // Note: even if EOF, returns true.
   } else if (port[1] === "file") {
     if (!itrp?.fs) {
-      throw create.Error("read-error", "No Interpreter or fs object.");
+      throw create.Error("read-error", fsMessage);
     }
     // Node.js has fstat, but doesn't have ftell(3) equivalent.
     // No way to say "ready" for reading.
@@ -616,7 +640,7 @@ export const writeString = defineBuiltInProcedure("write-string", [
   if (typeof st !== "number" || !Number.isInteger(st) || typeof ed !== "number" || !Number.isInteger(ed)) {
     throw create.Error("domain-error", "Index must be integer.");
   }
-  const s = str[1].slice(st, ed);
+  const s = Array.from(str[1]).slice(st, ed).join("");
   if (!port) {
     port = itrp.getDynamic(contentCS(stack).env.dynamic, "current-output-port");
     assert.Port(port);
@@ -644,7 +668,7 @@ export const writeString = defineBuiltInProcedure("write-string", [
     //   // Not a text port
   } else if (port[1] === "file") {
     if (!itrp?.fs) {
-      throw create.Error("write-error", "No Interpreter or fs object.");
+      throw create.Error("write-error", fsMessage);
     }
     itrp.fs.writeSync(port[2], s);
   } else {
@@ -703,7 +727,7 @@ const writeBytevector = defineBuiltInProcedure("write-bytevector", [
     port[2].push(...arr);
   } else if (port[1] === "file") {
     if (!itrp?.fs) {
-      throw create.Error("write-error", "No Interpreter or fs object.");
+      throw create.Error("write-error", fsMessage);
     }
     itrp.fs.writeSync(port[2], new Uint8Array(arr));
   } else {
@@ -741,7 +765,7 @@ const flushOutputPort = defineBuiltInProcedure("flush-output-port", [
     //   No flush function.
   } else if (port[1] === "file") {
     if (!itrp?.fs) {
-      throw create.Error("write-error", "No Interpreter or fs object.");
+      throw create.Error("write-error", fsMessage);
     }
     itrp.fs.fsyncSync(port[2]);
   } else {

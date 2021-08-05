@@ -16,5 +16,5 @@ export declare const procedures: {
     listToString: import("./interpreter").BuiltInProcedureDefinition<"list", ({ list }: Partial<Record<"list", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => import("./types").LISP.IString>;
     stringCopy: import("./interpreter").BuiltInProcedureDefinition<"end" | "start" | "str", ({ str, start, end }: Partial<Record<"end" | "start" | "str", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => import("./types").LISP.IString>;
     stringCopyD: import("./interpreter").BuiltInProcedureDefinition<"end" | "start" | "to" | "at" | "from", ({ to, at, from, start, end }: Partial<Record<"end" | "start" | "to" | "at" | "from", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => ["<undefined>"]>;
-    stringFillD: import("./interpreter").BuiltInProcedureDefinition<"end" | "start" | "fill" | "str", ({ str, fill, start, end }: Partial<Record<"end" | "start" | "fill" | "str", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => import("./types").LISP.IString>;
+    stringFillD: import("./interpreter").BuiltInProcedureDefinition<"end" | "start" | "fill" | "str", ({ str, fill, start, end }: Partial<Record<"end" | "start" | "fill" | "str", import("./types").LISP.Object | import("./types").LISP.Object[] | null>>) => ["<undefined>"]>;
 };

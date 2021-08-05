@@ -109,7 +109,7 @@ const withOutputToFile = defineBuiltInProcedure("with-output-to-file", [
 }, true, true);
 
 // (open-input-file string) file library procedure
-const openInputFile = defineBuiltInProcedure("open-input-file", [
+export const openInputFile = defineBuiltInProcedure("open-input-file", [
   { name: "str" }
 ], ({ str }, itrp) => {
   assertNonNull(itrp);

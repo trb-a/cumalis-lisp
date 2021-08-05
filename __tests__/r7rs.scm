@@ -17,6 +17,7 @@
         (scheme eval)
         (scheme process-context)
         (scheme case-lambda)
+        (scheme load)
         (scheme r5rs)
         (scheme repl)
         (scheme cxr))
@@ -1182,11 +1183,10 @@
 
 (test "a-c" (let ((str (string #\a #\b #\c))) (string-set! str 1 #\-) str))
 
-;X[Surrogate pair]
-;X(test (string #\a #\x1F700 #\c)
-;X    (let ((s (string #\a #\b #\c)))
-;X      (string-set! s 1 #\x1F700)
-;X      s))
+(test (string #\a #\x1F700 #\c)
+    (let ((s (string #\a #\b #\c)))
+      (string-set! s 1 #\x1F700)
+      s))
 
 (test #t (string=? "" ""))
 (test #t (string=? "abc" "abc" "abc"))
@@ -1866,14 +1866,13 @@
 (test "abc" (read-string 3 (open-input-string "abcd")))
 (test "abc" (read-string 3 (open-input-string "abc\ndef\n")))
 
-;X[surrogate pair]
-;X(let ((in (open-input-string (string #\x10F700 #\x10F701 #\x10F702))))
-;X  (let* ((c1 (read-char in))
-;X         (c2 (read-char in))
-;X         (c3 (read-char in)))
-;X    (test #\x10F700 c1)
-;X    (test #\x10F701 c2)
-;X    (test #\x10F702 c3)))
+(let ((in (open-input-string (string #\x10F700 #\x10F701 #\x10F702))))
+  (let* ((c1 (read-char in))
+         (c2 (read-char in))
+         (c3 (read-char in)))
+    (test #\x10F700 c1)
+    (test #\x10F701 c2)
+    (test #\x10F702 c3)))
 
 (test (string #\x10F700)
     (let ((out (open-output-string)))
@@ -2110,16 +2109,16 @@
 
 (test-end)
 
-;X (test-begin "Numeric syntax")
-;X
-;X ;; Numeric syntax adapted from Peter Bex's tests.
-;X ;;
-;X ;; These are updated to R7RS, using string ports instead of
-;X ;; string->number, and "error" tests removed because implementations
-;X ;; are free to provide their own numeric extensions.  Currently all
-;X ;; tests are run by default - need to cond-expand and test for
-;X ;; infinities and -0.0.
-;X
+(test-begin "Numeric syntax")
+
+;; Numeric syntax adapted from Peter Bex's tests.
+;;
+;; These are updated to R7RS, using string ports instead of
+;; string->number, and "error" tests removed because implementations
+;; are free to provide their own numeric extensions.  Currently all
+;; tests are run by default - need to cond-expand and test for
+;; infinities and -0.0.
+
 (define-syntax test-numeric-syntax
   (syntax-rules ()
     ((test-numeric-syntax str expect strs ...)
@@ -2370,9 +2369,6 @@
 ;X delete-file
 ;X getting value from system environment.
 
-
-
-
 ; lacking test for eval/environment
 (test 0 (eval '(sin 0) (environment '(scheme inexact))))
 (test #t (error-object? (guard (exn (else exn))
@@ -2405,6 +2401,8 @@
   (let ((env (interaction-environment)))
     (eval '(define y 10) env)
     (eval 'y env)))
+
+; Note: test for (scheme load) library.is in index.test.ts
 
 (test-end)
 

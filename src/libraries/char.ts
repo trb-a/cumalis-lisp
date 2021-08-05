@@ -111,7 +111,7 @@ const charLowerCaseQ = defineBuiltInProcedure("char-lower-case?", [
 }, false, true);
 
 // // (digit-value char) char library procedure
-const charDigitValueQ = defineBuiltInProcedure("digit-value", [
+const digitValue = defineBuiltInProcedure("digit-value", [
   { name: "char" }
 ], ({ char }) => {
   // Refer: UNICODE Nd (Decimal_Number)
@@ -250,7 +250,7 @@ const stringFoldcase = defineBuiltInProcedure("string-foldcase", [
 const procedures = [
   charCiEQ, charCiLtQ, charCiGtQ, charCiLeQ,
   charCiGeQ, charAlphabeticQ, charNumberQ, charWhitespaceQ,
-  charUpperCaseQ, charLowerCaseQ, charDigitValueQ, charUpcase,
+  charUpperCaseQ, charLowerCaseQ, digitValue, charUpcase,
   charDowncase, charFoldcase,
   stringCiEQ, stringCiLtQ, stringCiGtQ, stringCiLeQ, stringCiGeQ,
   stringUpcase, stringDowncase, stringFoldcase

@@ -59,15 +59,15 @@ const stringMap = defineBuiltInProcedure("string-map", [
   assert.Procedure(proc);
   assert.String(str1);
   assert.Strings(strs);
-  const arr = [str1, ...strs];
-  if (arr.every(str => str[1].length > 1)) {
+  const arr = [Array.from(str1[1]), ...strs.map(str => Array.from(str[1]))];
+  if (arr.every(str => str.length > 1)) {
     return forms.CallBuiltIn("string-append",
-      forms.CallBuiltIn("string", forms.Call(proc, ...arr.map(str => create.Character(str[1][0])))),
-      forms.CallBuiltIn("string-map", proc, ...arr.map(str => create.String(str[1].slice(1), false)))
+      forms.CallBuiltIn("string", forms.Call(proc, ...arr.map(str => create.Character(str[0])))),
+      forms.CallBuiltIn("string-map", proc, ...arr.map(str => create.String(str.slice(1).join(""), false)))
     );
-  } else if (arr.every(str => str[1].length >= 1)) {
+  } else if (arr.every(str => str.length >= 1)) {
     return forms.CallBuiltIn("string",
-      forms.Call(proc, ...arr.map(str => create.Character(str[1][0]))),
+      forms.Call(proc, ...arr.map(str => create.Character(str[0]))),
     );
   } else {
     return create.String("", false);
@@ -123,14 +123,14 @@ const stringForEach = defineBuiltInProcedure("string-for-each", [
   assert.Procedure(proc);
   assert.String(str1);
   assert.Strings(strs);
-  const arr = [str1, ...strs];
-  if (arr.every(str => str[1].length > 1)) {
+  const arr = [Array.from(str1[1]), ...strs.map(str=>Array.from(str[1]))];
+  if (arr.every(str => str.length > 1)) {
     return forms.Begin(
-      forms.Call(proc, ...arr.map(str => create.Character(str[1][0]))),
-      forms.CallBuiltIn("string-for-each", proc, ...arr.map(str => create.String(str[1].slice(1), false)))
+      forms.Call(proc, ...arr.map(str => create.Character(str[0]))),
+      forms.CallBuiltIn("string-for-each", proc, ...arr.map(str => create.String(str.slice(1).join(""), false)))
     );
-  } else if (arr.every(str => str[1].length >= 1)) {
-    return forms.Call(proc, ...arr.map(str => create.Character(str[1][0])));
+  } else if (arr.every(str => str.length >= 1)) {
+    return forms.Call(proc, ...arr.map(str => create.Character(str[0])));
   } else {
     return ["<undefined>"];
   }

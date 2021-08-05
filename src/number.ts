@@ -478,7 +478,7 @@ const stringToNumber = defineBuiltInProcedure("string->number", [
   { name: "radix", type: "optional" },
 ], ({ str, radix }) => {
   assert.String(str);
-  let s = str[1];
+  let s = str[1]; // Note: No need to think about surrogate pair here.
   if (radix) {
     assert.IntegerNumber(radix);
     if (![2, 8, 10, 16].includes(numberToJSNumber(radix))) {

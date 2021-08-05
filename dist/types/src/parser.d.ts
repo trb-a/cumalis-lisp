@@ -13,6 +13,7 @@ export declare const SpecialCharacters: {
 export declare type ParserOptions = {
     removeLineInfo?: boolean;
     extended?: boolean;
+    filename?: string;
 };
 export declare const fromStringToTokens: (src: string, filename?: string | undefined) => [token: string, info: LISP.SourceInfo][];
 export declare const fromTokensToTokenTrees: (tokens: ReturnType<typeof fromStringToTokens>) => [LISP.TokenTree[], ReturnType<typeof fromStringToTokens>];

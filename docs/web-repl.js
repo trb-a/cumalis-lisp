@@ -7,12 +7,7 @@
 
 /**  @type {Scheme} */
 var L = window["Scheme"];
-// Normally, the depth of the call-stack to be taken as "top level" is set to 1.
-// In this REPL, it is changed to 2. Because the expressions are evaluated in the
-// form like:
-//   (begin (eval (suspend <expression-as-toplevel>) env))
-// See R7RS 5.3.1. "Top level definitions".
-var itrp = new L.Interpreter({ toplevelDepth: 3 });
+var itrp = new L.Interpreter();
 
 // Load libraries and create "suspend" object (with envelope).
 /** @type {LSuspend} */

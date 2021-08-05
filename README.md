@@ -40,6 +40,7 @@ $ npm install cumalis-lisp
   * (scheme file)
   * (scheme eval)
   * (scheme repl)
+  * (scheme load)
   * (scheme r5rs)
 - Proper tail recursion. (tail call optimization)
 - Javascript interfaces
@@ -197,7 +198,6 @@ Note: If you want to serialize / deserialize suspended continuations, open files
     * "define-library" "cond-expand" "include" and "include-cli" are not implemented.
       (But you can define your own "built-in" procedures and libraries.)
   - About Strings:
-    * Surrogate pairs are not handled correctly. (Works like Javascript string primitive).
     * (eqv? "aaa" "aaa") returns #t. (like Javascript's "aaa" === "aaa" returns true).
   - About file library:
     * char-ready? u8-ready? raise errors for file ports. Because Node.js doesn't seem to have any ftell(3) equivalent.

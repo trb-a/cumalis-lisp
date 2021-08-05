@@ -2,7 +2,7 @@ import type { BuiltInLibraryDefinition } from "../interpreter"
 import { Dictionary, LISP } from "../types";
 import { contentCS, create, createCS, defineBuiltInProcedure } from "../utils";
 
-const interactionEnvironment  = defineBuiltInProcedure("interaction-environment", [
+export const interactionEnvironment  = defineBuiltInProcedure("interaction-environment", [
 ], () => {
   const tempStack = createCS(create.Undefined());
   return create.EnvironmentSpec(contentCS(tempStack).env);

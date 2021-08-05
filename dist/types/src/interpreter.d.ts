@@ -14,7 +14,6 @@ export declare type InterpreterOptions = {
     fs?: typeof NodeFS_NS;
     beforeExecute?: (stack: LISP.CallStack, value: LISP.Object | null) => [stack: LISP.CallStack, value: LISP.Object] | undefined;
     afterExecute?: (next: LISP.CallStack | null, result: LISP.Object | null, current: LISP.CallStack, value: LISP.Object | null) => void;
-    toplevelDepth?: number;
 };
 export declare type BuiltInProcedureBody<T extends Partial<Record<string, LISP.Object | LISP.Object[] | null>> = Partial<Record<string, LISP.Object | LISP.Object[] | null>>, U extends LISP.Object | LISP.CallStack = LISP.Object | LISP.CallStack> = (args: T, itrp?: Interpreter, stack?: LISP.CallStack) => U;
 export declare type BuiltInProcedureDefinition<T extends string = string, U extends BuiltInProcedureBody<Record<T, LISP.Object | LISP.Object[] | null>> = BuiltInProcedureBody<Record<T, LISP.Object | LISP.Object[] | null>>> = {
