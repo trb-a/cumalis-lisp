@@ -1,4 +1,6 @@
 import { LISP } from "./types";
+export declare const inexact: import("./interpreter").BuiltInProcedureDefinition<"z", ({ z }: Partial<Record<"z", LISP.Object | LISP.Object[] | null>>) => LISP.INumber>;
+export declare const exact: import("./interpreter").BuiltInProcedureDefinition<"z", ({ z }: Partial<Record<"z", LISP.Object | LISP.Object[] | null>>) => LISP.INumber>;
 export declare const procedures: {
     numberQ: import("./interpreter").BuiltInProcedureDefinition<"obj", ({ obj }: Partial<Record<"obj", LISP.Object | LISP.Object[] | null>>) => LISP.IBoolean>;
     realQ: import("./interpreter").BuiltInProcedureDefinition<"obj", ({ obj }: Partial<Record<"obj", LISP.Object | LISP.Object[] | null>>) => LISP.IBoolean>;

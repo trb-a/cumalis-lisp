@@ -431,14 +431,14 @@ const expt = defineBuiltInProcedure("expt", [
 // (magnitude z) complex library procedure.
 // (angle z) complex library procedure.
 
-const inexact = defineBuiltInProcedure("inexact", [
+export const inexact = defineBuiltInProcedure("inexact", [
   { name: "z" },
 ], ({ z }) => {
   assert.Number(z);
   return z; // We don't support exact/inexact numbers directly.
 });
 
-const exact = defineBuiltInProcedure("exact", [
+export const exact = defineBuiltInProcedure("exact", [
   { name: "z" },
 ], ({ z }) => {
   assert.Number(z);

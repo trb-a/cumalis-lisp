@@ -8,7 +8,7 @@ const finiteQ = defineBuiltInProcedure("finite?", [
   assert.Number(z);
   const num = numberToJSNumber(z);
   return create.Boolean(Number.isFinite(num));
-});
+}, false, true);
 
 const infiniteQ = defineBuiltInProcedure("infinite?", [
   { name: "z" }
@@ -16,7 +16,7 @@ const infiniteQ = defineBuiltInProcedure("infinite?", [
   assert.Number(z);
   const num = numberToJSNumber(z);
   return create.Boolean(!Number.isNaN(num) && !Number.isFinite(num));
-});
+}, false, true);
 
 // (exp z) inexact library procedure.
 const exp = defineBuiltInProcedure("exp", [
@@ -25,7 +25,7 @@ const exp = defineBuiltInProcedure("exp", [
   assert.Number(z);
   const num = numberToJSNumber(z);
   return JSNumberToNumber(Math.exp(num));
-});
+}, false, true);
 
 // (log z) inexact library procedure.
 // (log z1 z2) inexact library procedure.
@@ -42,7 +42,7 @@ const log = defineBuiltInProcedure("log", [
   } else {
     return JSNumberToNumber(Math.log(num1));
   }
-});
+}, false, true);
 
 // (sin z) inexact library procedure.
 const sin = defineBuiltInProcedure("sin", [
@@ -51,7 +51,7 @@ const sin = defineBuiltInProcedure("sin", [
   assert.Number(z);
   const num = numberToJSNumber(z);
   return JSNumberToNumber(Math.sin(num));
-});
+}, false, true);
 
 // (cos z) inexact library procedure.
 const cos = defineBuiltInProcedure("cos", [
@@ -60,7 +60,7 @@ const cos = defineBuiltInProcedure("cos", [
   assert.Number(z);
   const num = numberToJSNumber(z);
   return JSNumberToNumber(Math.cos(num));
-});
+}, false, true);
 
 // (tan z) inexact library procedure.
 const tan = defineBuiltInProcedure("tan", [
@@ -69,7 +69,7 @@ const tan = defineBuiltInProcedure("tan", [
   assert.Number(z);
   const num = numberToJSNumber(z);
   return JSNumberToNumber(Math.tan(num));
-});
+}, false, true);
 
 // (asin z) inexact library procedure.
 const asin = defineBuiltInProcedure("asin", [
@@ -78,7 +78,7 @@ const asin = defineBuiltInProcedure("asin", [
   assert.Number(z);
   const num = numberToJSNumber(z);
   return JSNumberToNumber(Math.asin(num));
-});
+}, false, true);
 
 // (acos z) inexact library procedure.
 const acos = defineBuiltInProcedure("acos", [
@@ -87,7 +87,7 @@ const acos = defineBuiltInProcedure("acos", [
   assert.Number(z);
   const num = numberToJSNumber(z);
   return JSNumberToNumber(Math.acos(num));
-});
+}, false, true);
 
 // (atan z) inexact library procedure.
 // (atan y x) inexact library procedure.
@@ -104,7 +104,7 @@ const atan = defineBuiltInProcedure("atan", [
   } else {
     return JSNumberToNumber(Math.atan(num1))
   }
-});
+}, false, true);
 
 // (sqrt z) inexact library procedure.
 const sqrt = defineBuiltInProcedure("sqrt", [
@@ -113,7 +113,7 @@ const sqrt = defineBuiltInProcedure("sqrt", [
   assert.Number(z);
   const num = numberToJSNumber(z);
   return JSNumberToNumber(Math.sqrt(num));
-});
+}, false, true);
 
 const procedures = [finiteQ,infiniteQ,exp,log,sin,cos,tan,asin,acos,atan,sqrt];
 const InexactLibrary: BuiltInLibraryDefinition = (itrp) => {

@@ -78,6 +78,7 @@ export const cloneCS = (cs: LISP.CallStack): LISP.CallStack => {
 
 // Note: before, after is for dynamic-wind.
 // Note: handler is for exception-handlers.
+// Note: env is for eval.
 export const forkCS = (
   parent: LISP.CallStack,
   expr: LISP.Object,
@@ -151,6 +152,7 @@ export const create = {
   Promise: (...args: ExceptFirst<LISP.IPromise>): LISP.IPromise => ["<promise>", ...args],
   Error: (name: string, message: string | null, irritants: LISP.Object[] = []): LISP.IError => ["<error>", name, message, irritants],
   Continuation: (...args: ExceptFirst<LISP.IContinuation>): LISP.IContinuation => ["<continuation>", ...args],
+  EnvironmentSpec: (...args: ExceptFirst<LISP.IEnvironmentSpec>): LISP.IEnvironmentSpec => ["<environment-spec>", ...args],
   JS: (...args: ExceptFirst<LISP.IJS>): LISP.IJS => ["<js>", ...args],
   List: (...args: LISP.Object[]): LISP.List => (
     args.reverse().reduce<LISP.List>((prev, curr) => ["<pair>", curr, prev, false], ["<null>"])
@@ -222,6 +224,7 @@ export const is = {
   MultiValue: (o: unknown): o is LISP.IMultiValue => (o instanceof Array && (o[0] === "<multi-value>")),
   SyntaxRules: (o: unknown): o is LISP.ISyntaxRules => (o instanceof Array && o[0] === "<syntax-rules>"),
   Parameter: (o: unknown): o is LISP.IParameter => (o instanceof Array && o[0] === "<parameter>"),
+  EnvironmentSpec: (o: unknown): o is LISP.IEnvironmentSpec => (o instanceof Array && o[0] === "<environment-spec>"),
   Exception: (o: unknown): o is LISP.IException => (o instanceof Array && o[0] === "<exception>"),
   Undefined: (o: unknown): o is LISP.IUndefined => (o instanceof Array && o[0] === "<undefined>"),
   Promise: (o: unknown): o is LISP.IPromise => (o instanceof Array && o[0] === "<promise>"),
@@ -289,6 +292,7 @@ export const assert: {
   Procedure: (v: any, message?: string | undefined) => asserts v is LISP.Procedure;
   SyntaxRules: (v: any, message?: string | undefined) => asserts v is LISP.ISyntaxRules;
   Parameter: (v: any, message?: string | undefined) => asserts v is LISP.IParameter;
+  EnvironmentSpec: (v: any, message?: string | undefined) => asserts v is LISP.IEnvironmentSpec;
   RecordType: (v: any, message?: string | undefined) => asserts v is LISP.IRecordType;
   Record: (v: any, message?: string | undefined) => asserts v is LISP.IRecord;
   MultiValue: (v: any, message?: string | undefined) => asserts v is LISP.IMultiValue;
@@ -326,6 +330,7 @@ export const assert: {
   Procedure: makeAsserter(is.Procedure, "A <procedure> is expected."),
   SyntaxRules: makeAsserter(is.SyntaxRules, "A <syntax-rules> is expected."),
   Parameter: makeAsserter(is.Parameter, "A <parameter> is expected."),
+  EnvironmentSpec: makeAsserter(is.EnvironmentSpec, "A <environment-spec> is expected."),
   RecordType: makeAsserter(is.RecordType, "A <record-type> is expected."),
   Record: makeAsserter(is.Record, "A <record> is expected."),
   MultiValue: makeAsserter(is.MultiValue, "A <multi-value> is expected."),

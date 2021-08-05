@@ -38,6 +38,7 @@ export declare const create: {
     Promise: (thunk: LISP.Procedure | null, value: LISP.Object | null) => LISP.IPromise;
     Error: (name: string, message: string | null, irritants?: LISP.Object[]) => LISP.IError;
     Continuation: (stack: LISP.CallStack) => LISP.IContinuation;
+    EnvironmentSpec: (env: LISP.Env) => LISP.IEnvironmentSpec;
     JS: (...args: ExceptFirst<LISP.IJS>) => LISP.IJS;
     List: (...args: LISP.Object[]) => LISP.List;
     Suspend: (continuation: LISP.IContinuation, value: LISP.Object) => LISP.Suspend;
@@ -87,6 +88,7 @@ export declare const is: {
     MultiValue: (o: unknown) => o is LISP.IMultiValue;
     SyntaxRules: (o: unknown) => o is LISP.ISyntaxRules;
     Parameter: (o: unknown) => o is LISP.IParameter;
+    EnvironmentSpec: (o: unknown) => o is LISP.IEnvironmentSpec;
     Exception: (o: unknown) => o is LISP.IException;
     Undefined: (o: unknown) => o is LISP.IUndefined;
     Promise: (o: unknown) => o is LISP.IPromise;
@@ -127,6 +129,7 @@ export declare const assert: {
     Procedure: (v: any, message?: string | undefined) => asserts v is LISP.Procedure;
     SyntaxRules: (v: any, message?: string | undefined) => asserts v is LISP.ISyntaxRules;
     Parameter: (v: any, message?: string | undefined) => asserts v is LISP.IParameter;
+    EnvironmentSpec: (v: any, message?: string | undefined) => asserts v is LISP.IEnvironmentSpec;
     RecordType: (v: any, message?: string | undefined) => asserts v is LISP.IRecordType;
     Record: (v: any, message?: string | undefined) => asserts v is LISP.IRecord;
     MultiValue: (v: any, message?: string | undefined) => asserts v is LISP.IMultiValue;

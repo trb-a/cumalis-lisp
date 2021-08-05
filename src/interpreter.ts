@@ -37,6 +37,9 @@ import CharLibrary from "./libraries/char";
 import CxrLibrary from "./libraries/cxr";
 import ProcessContextLibrary from "./libraries/process-context";
 import FileLibrary from "./libraries/file";
+import EvalLibrary from "./libraries/eval";
+import ReplLibrary from "./libraries/repl";
+import R5RSLibrary from "./libraries/r5rs";
 
 // -------------------------------------------------------
 //                       Consant
@@ -73,6 +76,9 @@ const BuiltInLibraryDefinitions: Record<string, BuiltInLibraryDefinition> = {
   "(scheme cxr)": CxrLibrary,
   "(scheme process-context)": ProcessContextLibrary,
   "(scheme file)": FileLibrary,
+  "(scheme eval)": EvalLibrary,
+  "(scheme repl)": ReplLibrary,
+  "(scheme r5rs)": R5RSLibrary,
 };
 
 const BuiltInJSObjects: [string, LISP.Object][] = [

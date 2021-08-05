@@ -52,6 +52,36 @@ try {
     suspend = e.content;
   }
 }
+
+// IMPROVEME After release 0.5.10:
+// toplevelDepth = 3
+// // Load libraries and create "suspend" object (with envelope).
+// /** @type {LSuspend} */
+// var suspend;
+// try {
+//   itrp.eval(`
+//     (import (scheme base) (scheme eval) (scheme repl))
+//     (define env (interaction-environment))
+//     (eval '(
+//       (import
+//         (scheme base)
+//         (scheme char)
+//         (scheme lazy)
+//         (scheme inexact)
+//         (scheme time)
+//         (scheme read)
+//         (scheme write)
+//         (scheme eval)
+//         (scheme case-lambda)
+//         (scheme cxr))) env)
+//     (eval (suspend) env)
+//   `);
+// } catch (e) {
+//   if (L.isSuspendEnvelope(e)) {
+//     suspend = e.content;
+//   }
+// }
+
 if (!suspend) {
   throw new Error("No suspend object!");
 }

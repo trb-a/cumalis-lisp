@@ -12,7 +12,7 @@ import { assertNonNull, assert, is,  contentStack, create, forms, defineBuiltInP
 // Note: Very limited support.
 // Only importing built-in library at the top-level is supported.
 // only, except, prefix, rename is not supported.
-const Import = defineBuiltInProcedure("import", [
+export const Import = defineBuiltInProcedure("import", [
   { name: "sets", type: "variadic", evaluate: false }
 ], ({ sets }, itrp, stack): LISP.Object => {
   assert.Objects(sets);
@@ -41,7 +41,7 @@ const Import = defineBuiltInProcedure("import", [
     }
   }
   return ["<undefined>"];
-}, true);
+});
 
 const define = defineBuiltInProcedure("define", [
   { name: "arg1", evaluate: false },

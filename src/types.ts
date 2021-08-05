@@ -55,6 +55,7 @@ export declare namespace LISP {
   type ISyntaxRulePattern = [className: "<syntax-rule-pattern>", head: Object[], variadic: Object | null, tail: Object[] /*, end: string | null */];
   type ISyntaxRules = [className: "<syntax-rules>", ellipsis: string, literals: string[], rules: [ISyntaxRulePattern, LISP.Object][]];
   type IParameter = [className: "<parameter>", name: string, converter: Procedure | null];
+  type IEnvironmentSpec = [className: "<environment-spec>", env: LISP.Env];
   type IJS = (
     ["<js>", "built-in", string] |
     ["<js>", "inline", any]
@@ -63,7 +64,7 @@ export declare namespace LISP {
   // Grouped data classes.
   type Object = Symbol | String | Number | Boolean | Character | List |
     Vector | ByteVector | EndOfFile | Procedure | Port | RecordType | Record |
-    MultiValue | SyntaxRules | Exception | Undefined | Promise | Error | JS;
+    MultiValue | SyntaxRules | Exception | Undefined | Promise | Error | EnvironmentSpec | JS;
   type Symbol = ISymbol;
   type String = IString;
   type Number = INumber;
@@ -81,6 +82,7 @@ export declare namespace LISP {
   type MultiValue = IMultiValue;
   type Continuation = IContinuation;
   type SyntaxRules = ISyntaxRules;
+  type EnvironmentSpec = IEnvironmentSpec;
   type Parameter = IParameter;
   type Procedure = IProcedure | IContinuation | IParameter;
   type Error = IError;

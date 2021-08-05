@@ -15,7 +15,7 @@ $ npm install cumalis-lisp
 
 ## Features
 
-- Most of R7RS (small) "(scheme base)" library, including:
+- Implemented most of R7RS (small) including:
   * call-with-current-continuation (call/cc).
   * guard / with-exception-handler / raise / raise-continuable.
   * dynamic-wind.
@@ -26,7 +26,8 @@ $ npm install cumalis-lisp
   * quasiquote.
   * nested multiline comments.
   * etc.
-- Other standard libraries implemented:
+- Standard libraries in R7RS (small) except (scheme complex) are implemented.
+  * (scheme base) -- imported by default.
   * (scheme read)
   * (scheme write)
   * (scheme promise)
@@ -37,6 +38,9 @@ $ npm install cumalis-lisp
   * (scheme cxr)
   * (scheme process-context)
   * (scheme file)
+  * (scheme eval)
+  * (scheme repl)
+  * (scheme r5rs)
 - Proper tail recursion. (tail call optimization)
 - Javascript interfaces
   * Adding built-in procedures.
@@ -53,6 +57,8 @@ With these features, The following application fields can be considered.
 - Agent systems. (Send running application via network and continue to run on another machine.)
 - Games that need to save the running status.
 - Work-flow systems.
+- Backend of Web-based visual programming environment, like [scratch-blocks](https://github.com/LLK/scratch-blocks) or [Blockly](https://developers.google.com/blockly).
+  * Note: Cumalis Lisp is expected to be the backend of ["Cumalis"](https://cumalis.net/) in the next major version.
 - etc.
 
 ## Web REPL
@@ -139,8 +145,8 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
 
 ### Using files
 
-To handle files on Node.js, "fs" object must be set as option when you
-create a Interpreter instance.
+To handle files in Cumalis Lisp on Node.js, "fs" object must be passed to the interpreter
+as a constructor's option when you create a Interpreter instance.
 
 ```Typescript
   import fs from "fs";
@@ -169,32 +175,36 @@ Note: If you want to serialize / deserialize suspended continuations, open files
 
 ## Limitations
 
-  - R7RS standard libraries listed below are not implemented.
-    * (scheme complex)
-    * (scheme eval)
-    * (scheme repl)
-    * (scheme r5rs)
-  - Limited support for importing / exporting libraries.
-    * "(scheme base)" is imported by default. Importing "(scheme base)" is just ignored.
+  - About number:
+    * Only integer and real number is supported. Complex / fraction number is not implemented.
+    * Standard library (scheme complex) is not implemented.
+    * 1.0 and 1 is same value. (like Javascript's number primitive).
+    * "exact" means Number.isSafeInteger is true in Javascript.
+      - "exact" procedure trys to convert float numbers to safe-integer. It raises an error if it fails.
+      - "inexact" procedure does nothing than returning the given value.
+    * In S-expressions, hexadecimal, octal, binary literals can't have digits.
+  - Limited syntax-rules support:
+    * Only lists are supported for now. No vector rules.
+    * Only flat patterns are supported. No nested patterns.
+    * Improper list patterns are not supported.
+  - About environment:
+    * (scheme base) library is imported by default. importing "(scheme base)" is just ignored.
+    * (scheme base) is imported by default even if (environment) (null-environment) (scheme-report-environment 5).
+    * (environment) doesn't make "immutable binding".
+  - Limited support for importing / exporting libraries:
     * "import" can only import built-in libraries at the top-level.
     * Importing with "only" "except" "prefix" "rename" is not supported.
     * "define-library" "cond-expand" "include" and "include-cli" are not implemented.
       (But you can define your own "built-in" procedures and libraries.)
-  - About number, only integer and real number is supported.
-    * Complex / fraction number is not implemented.
-    * 1.0 and 1 is same value. (like Javascript's number primitive).
-    * "exact" means Number.isSafeInteger is true in Javascript.
-    * In S-expressions, hexadecimal, octal, binary literals can't have digits.
-  - Limited syntax-rules support.
-    * Only lists are supported for now. No vector rules.
-    * Only flat patterns are supported. No nested patterns.
-    * Improper list patterns are not supported.
-  - Strings doesn't handle surrogate pairs correctly. (Works like Javascript string).
-  - About file library.
-    * char-ready? u8-ready? raise errors for file ports. Because Node.js doesn't seem to have any ftell(3) equivalent. read-char read-line etc. may block until complete reading.
+  - About Strings:
+    * Surrogate pairs are not handled correctly. (Works like Javascript string primitive).
+    * (eqv? "aaa" "aaa") returns #t. (like Javascript's "aaa" === "aaa" returns true).
+  - About file library:
+    * char-ready? u8-ready? raise errors for file ports. Because Node.js doesn't seem to have any ftell(3) equivalent.
+    * read-char read-line etc. may block until complete reading.
 
 ## Notes
-  - (eqv? "aaa" "aaa") returns #t. (like Javascript's "aaa" === "aaa" returns true).
+
   - toReferentialJSON / fromReferentialJSON don't respect "toJSON" property of class instances. If you want to include class instances in serialization, please consider other serializers like js-yaml, etc.
   - exit / emergency-exit does't do process.exit() but throws an Envelope object that isExitEnvelope() returns true, so that users can catch it and  perform proper finalizations.
  
@@ -208,6 +218,7 @@ Note: If you want to serialize / deserialize suspended continuations, open files
   - Add async/await feature to handle Javascript's async functions.
   - Add some built-in library to handle <js> objects.
   - It will be nice if there are Regular expressions(SRFI-115), Hashtables(SRFI-69), Handling date and time(SRFI-19), Sorting lists and vectors, etc.
+  - Fraction/Complex might be implemented using Fraction.js and Complex.js.
 
 ## LICENSE
 

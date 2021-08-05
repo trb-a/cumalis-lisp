@@ -11,17 +11,14 @@
 ;X[Some libraries are not implemented.]
 ;X        (scheme complex)
         (scheme time)
-;X[Some libraries are not implemented.]
         (scheme file)
         (scheme read)
         (scheme write)
-;X[Some libraries are not implemented.]
-;X        (scheme eval)
+        (scheme eval)
         (scheme process-context)
         (scheme case-lambda)
-;X[Some libraries are not implemented.]
-;X        (scheme r5rs)
-;X        (scheme repl) -- Note: No tests yet.
+        (scheme r5rs)
+        (scheme repl)
         (scheme cxr))
 
 (test-begin "R7RS")
@@ -1796,21 +1793,20 @@
 
 (test-begin "6.12 Environments and evaluation")
 
-;X[r5rs library / eval library]
-;X ;; (test 21 (eval '(* 7 3) (scheme-report-environment 5)))
-;X
-;X (test 20
-;X     (let ((f (eval '(lambda (f x) (f x x)) (null-environment 5))))
-;X       (f + 10)))
-;X
-;X (test 1024 (eval '(expt 2 10) (environment '(scheme base))))
+(test 21 (eval '(* 7 3) (scheme-report-environment 5)))
+
+(test 20
+    (let ((f (eval '(lambda (f x) (f x x)) (null-environment 5))))
+      (f + 10)))
+
+(test 1024 (eval '(expt 2 10) (environment '(scheme base))))
 ;X ;; (sin 0) may return exact number
-;X (test 0.0 (inexact (eval '(sin 0) (environment '(scheme inexact)))))
-;X ;; ditto
-;X (test 1024.0 (eval '(+ (expt 2 10) (inexact (sin 0)))
-;X                    (environment '(scheme base) '(scheme inexact))))
-;X
-;X (test-end)
+(test 0.0 (inexact (eval '(sin 0) (environment '(scheme inexact)))))
+;; ditto
+(test 1024.0 (eval '(+ (expt 2 10) (inexact (sin 0)))
+                   (environment '(scheme base) '(scheme inexact))))
+
+(test-end)
 
 (test-begin "6.13 Input and output")
 
@@ -2373,6 +2369,42 @@
 ;X file-exists?
 ;X delete-file
 ;X getting value from system environment.
+
+
+
+
+; lacking test for eval/environment
+(test 0 (eval '(sin 0) (environment '(scheme inexact))))
+(test #t (error-object? (guard (exn (else exn))
+    (eval '(sin 0) (environment)))))
+
+
+(let ((x 10))
+  (let ((env (environment)))
+    (test #t
+      (eval
+        '(error-object? (guard (exn (else exn)) x))
+        env))))
+
+
+; lacing tet for r5rs
+(test 1.0 (eval '(exact->inexact 1) (environment '(scheme r5rs))))
+(test 1 (eval '(inexact->exact 1.0) (environment '(scheme r5rs))))
+
+; repl
+(test 21 (eval '(* 7 3) (interaction-environment)))
+
+(let ((x 10))
+  (let ((env (interaction-environment)))
+    (test #t
+      (eval
+        '(error-object? (guard (exn (else exn)) x))
+        env))))
+
+(test 10
+  (let ((env (interaction-environment)))
+    (eval '(define y 10) env)
+    (eval 'y env)))
 
 (test-end)
 
