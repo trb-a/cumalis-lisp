@@ -76,9 +76,10 @@ export const cloneCS = (cs: LISP.CallStack): LISP.CallStack => {
   return ["#CALL-STACK#", { ...content, args: args ? [...args] : null }, parentCS(cs)];
 }
 
+// call-with-values, dynamic-wind, begin(root), evaluating operator and arguments,
+// before-handler, evaluation of lambda-macro use this.
 // Note: before, after is for dynamic-wind.
-// Note: handler is for exception-handlers.
-// Note: env is for eval.
+// Note: env is for lambda-macro.
 export const forkCS = (
   parent: LISP.CallStack,
   expr: LISP.Object,
@@ -97,7 +98,7 @@ export const forkCS = (
   }, parent];
 }
 
-// Note: "env" is for lambda procedure call.
+// Note: "env" is for lambda procedure call / eval.
 // Note: "handler" is for with-exception-handler and error handlers.
 // Note: "oper"/"want" is for call-with-values
 // Note: "before" / "after" is for "after" handler of dynamic-wind to avoid infinite loops.

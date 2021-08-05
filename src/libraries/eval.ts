@@ -1,7 +1,7 @@
 import type { BuiltInLibraryDefinition } from "../interpreter"
 import { Import } from "../structure";
 import { Dictionary, LISP } from "../types";
-import { assert, assertNonNull, contentCS, create, createCS, defineBuiltInProcedure, forkCS } from "../utils";
+import { assert, assertNonNull, contentCS, create, createCS, defineBuiltInProcedure, transferCS } from "../utils";
 
 const environment = defineBuiltInProcedure("environment", [
   { name: "sets", type: "variadic" }
@@ -22,7 +22,7 @@ const Eval = defineBuiltInProcedure("eval", [
   assert.Object(expr);
   assert.EnvironmentSpec(spec);
   assertNonNull(stack);
-  return forkCS(stack, expr, { env: spec[1] });
+  return transferCS(stack, expr, { env: spec[1] });
 }, false, true);
 
 const procedures = [environment, Eval];

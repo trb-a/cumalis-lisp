@@ -10,79 +10,39 @@ var L = window["Scheme"];
 // Normally, the depth of the call-stack to be taken as "top level" is set to 1.
 // In this REPL, it is changed to 2. Because the expressions are evaluated in the
 // form like:
-//   (eval (suspend <expression-as-toplevel>))
+//   (begin (eval (suspend <expression-as-toplevel>) env))
 // See R7RS 5.3.1. "Top level definitions".
-var itrp = new L.Interpreter({ toplevelDepth: 2 });
-
-// IMPROVEME: delete this once we have implemented "eval library"
-itrp.setBuiltInProcedure(
-  L.defineBuiltInProcedure("eval", [
-    { name: "obj" }
-  ], function (args) {
-    if (!L.is.Object(args["obj"])) {
-      throw new Error("Not a object");
-    }
-    return args["obj"];
-  }, true)
-);
+var itrp = new L.Interpreter({ toplevelDepth: 3 });
 
 // Load libraries and create "suspend" object (with envelope).
 /** @type {LSuspend} */
 var suspend;
+var env;
 try {
-  itrp.evalAST(
-    L.forms.CallBuiltIn("eval",
-      L.forms.CallBuiltIn("suspend",
-        L.fromJS(["import",
-          ["scheme", "base"],
-          ["scheme", "char"],
-          ["scheme", "lazy"],
-          ["scheme", "inexact"],
-          ["scheme", "time"],
-          ["scheme", "read"],
-          ["scheme", "write"],
-          ["scheme", "case-lambda"],
-          ["scheme", "cxr"],
-        ])
-      )
-    )
-  );
+  itrp.eval(`
+    (import (scheme base) (scheme eval) (scheme repl))
+    (define env (interaction-environment))
+    (eval
+      '(import
+        (scheme base)
+        (scheme char)
+        (scheme lazy)
+        (scheme inexact)
+        (scheme time)
+        (scheme read)
+        (scheme write)
+        (scheme eval)
+        (scheme case-lambda)
+        (scheme cxr)) env)
+    (eval (suspend env) env)
+  `);
 } catch (e) {
   if (L.isSuspendEnvelope(e)) {
     suspend = e.content;
+    env = L.suspendValueFromEnvelope(e);
   }
 }
-
-// IMPROVEME After release 0.5.10:
-// toplevelDepth = 3
-// // Load libraries and create "suspend" object (with envelope).
-// /** @type {LSuspend} */
-// var suspend;
-// try {
-//   itrp.eval(`
-//     (import (scheme base) (scheme eval) (scheme repl))
-//     (define env (interaction-environment))
-//     (eval '(
-//       (import
-//         (scheme base)
-//         (scheme char)
-//         (scheme lazy)
-//         (scheme inexact)
-//         (scheme time)
-//         (scheme read)
-//         (scheme write)
-//         (scheme eval)
-//         (scheme case-lambda)
-//         (scheme cxr))) env)
-//     (eval (suspend) env)
-//   `);
-// } catch (e) {
-//   if (L.isSuspendEnvelope(e)) {
-//     suspend = e.content;
-//   }
-// }
-
-if (!suspend) {
+if (!suspend || !L.is.EnvironmentSpec(env)) {
   throw new Error("No suspend object!");
 }
 
@@ -96,9 +56,8 @@ var terminal = $("#term").terminal(function (cmd, t) {
     itrp.resume(suspend,
       L.forms.CallBuiltIn("quote",
         L.forms.CallBuiltIn("eval",
-          L.forms.CallBuiltIn("suspend",
-            obj
-          )
+          L.forms.CallBuiltIn("suspend", obj),
+          env
         )
       )
     );

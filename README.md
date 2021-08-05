@@ -167,7 +167,7 @@ as a constructor's option when you create a Interpreter instance.
   `);
 ```
 
-Note: If you want to serialize / deserialize suspended continuations, open files status (seek position, open/close status, etc) can't be recovered when you deserialize / resume. It will cause unexpected behaviour. Be sure to close files before serialization.
+Note: If you want to serialize / deserialize suspended continuations, open files status (seek position, open/close status, etc) can't be recovered when you deserialize / resume. It will cause unexpected behaviour. Be sure to close files before suspend / serialization.
 
 ## R7RS Specification
 
