@@ -52,7 +52,7 @@ export declare namespace LISP {
   type IError = [className: "<error>", name: string, message: string | null, irritants: Object[]];
   type IContinuation = [className: "<continuation>", stack: CallStack];
   // Only "flat", "non-vector", "proper list" patterns are supported for now.
-  type ISyntaxRulePattern = [className: "<syntax-rule-pattern>", head: Object[], variadic: Object | null, tail: Object[] /*, end: string | null */];
+  type ISyntaxRulePattern = [className: "<syntax-rule-pattern>", head: (Object | ISyntaxRulePattern)[], variadic: (Object | ISyntaxRulePattern) | null, tail: (Object | ISyntaxRulePattern)[], end: (Object | ISyntaxRulePattern) | null];
   type ISyntaxRules = [className: "<syntax-rules>", ellipsis: string, literals: string[], rules: [ISyntaxRulePattern, LISP.Object][]];
   type IParameter = [className: "<parameter>", name: string, converter: Procedure | null];
   type IEnvironmentSpec = [className: "<environment-spec>", env: LISP.Env];
@@ -135,7 +135,7 @@ export declare namespace LISP {
   type ProcedureParameter<
     T extends string = string,
     U extends "head" | "optional" | "variadic" | "tail" = "head" | "optional" | "variadic" | "tail"
-    // Note: "end" parameter (not proper list) is not accepted for now.
+    // Note: "end" parameter (not proper list) is not accepted for now. It's too difficult!
     // U extends "head" | "optional" | "variadic" | "tail" | "end" = "head" | "optional" | "variadic" | "tail" | "end"
     > = {
       name: T;

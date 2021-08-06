@@ -74,7 +74,7 @@ export declare namespace LISP {
     type IPromise = [className: "<promise>", thunk: Procedure | null, value: Object | null];
     type IError = [className: "<error>", name: string, message: string | null, irritants: Object[]];
     type IContinuation = [className: "<continuation>", stack: CallStack];
-    type ISyntaxRulePattern = [className: "<syntax-rule-pattern>", head: Object[], variadic: Object | null, tail: Object[]];
+    type ISyntaxRulePattern = [className: "<syntax-rule-pattern>", head: (Object | ISyntaxRulePattern)[], variadic: (Object | ISyntaxRulePattern) | null, tail: (Object | ISyntaxRulePattern)[], end: (Object | ISyntaxRulePattern) | null];
     type ISyntaxRules = [className: "<syntax-rules>", ellipsis: string, literals: string[], rules: [ISyntaxRulePattern, LISP.Object][]];
     type IParameter = [className: "<parameter>", name: string, converter: Procedure | null];
     type IEnvironmentSpec = [className: "<environment-spec>", env: LISP.Env];

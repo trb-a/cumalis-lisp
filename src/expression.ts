@@ -10,6 +10,7 @@
 // case-lambda -- case-lambda library
 
 import { equalQ, eqvQ } from "./equivalence";
+import type { Interpreter } from "./interpreter";
 import { LISP } from "./types";
 import { assertArray, assertNonNull, assert, is, contentCS, create, defineBuiltInProcedure, formalsToParameters, forms, arrayToList, listToArray, pairToArrayWithEnd, transferCS, uniqueId, contentStack, parentCS, forkCS, addStaticNS } from "./utils";
 
@@ -414,6 +415,7 @@ const begin = defineBuiltInProcedure("begin", [
   }
 }, true);
 
+// Note: 
 const Do = defineBuiltInProcedure("do", [
   {name: "specs", evaluate: false},
   {name: "clause", evaluate: false},
@@ -437,7 +439,7 @@ const Do = defineBuiltInProcedure("do", [
     specArray.map(([symbol, init]) => [symbol, init]),
     forms.If(
       test,
-      forms.Begin(...listToArray(exprs)),
+      is.Null(exprs) ? create.Undefined() : forms.Begin(...listToArray(exprs)),
       forms.Begin(
         ...commands,
         forms.CallBuiltIn("do",
@@ -710,6 +712,24 @@ const letrecSyntax = defineBuiltInProcedure("letrec-syntax", [
   );
 }, true);
 
+// Sub function for syntax-rules.
+// Note: Currently only list patterns are suported. vectors are not supported.
+const patternListToSyntaxRulePattern = (list: LISP.Pair, ellipsis: string, isRoot = true): LISP.ISyntaxRulePattern => {
+  const [arr, end] = pairToArrayWithEnd(list);
+  const ellipsisIdx = arr.findIndex(item => is.Symbol(item) && item[1] === ellipsis);
+  const head = isRoot
+    ? ellipsisIdx < 0 ? arr.slice(1) : arr.slice(1, ellipsisIdx - 1) // Note: ignore first position.
+    : ellipsisIdx < 0 ? arr : arr.slice(0, ellipsisIdx - 1)
+  const tail = ellipsisIdx < 0 ? [] : arr.slice(ellipsisIdx + 1);
+  const variadic = ellipsisIdx < 0 ? null : arr[ellipsisIdx -1] ?? null;
+  return ["<syntax-rule-pattern>",
+    head.map(p => is.Pair(p) ? patternListToSyntaxRulePattern(p, ellipsis, false) : p),
+    !variadic ? null : is.Pair(variadic) ?  patternListToSyntaxRulePattern(variadic, ellipsis, false) : variadic,
+    tail.map(p => is.Pair(p) ? patternListToSyntaxRulePattern(p, ellipsis, false) : p),
+    is.Null(end) ? null : end
+  ];
+}
+
 const syntaxRules = defineBuiltInProcedure("syntax-rules", [
   { name: "arg1", evaluate: false },
   { name: "arg2", evaluate: false },
@@ -764,118 +784,201 @@ const syntaxRules = defineBuiltInProcedure("syntax-rules", [
     assert.Pair(cloned);
     assert.Pair(cloned[2]);
     const [, pattern, [, template]] = cloned;
-    // Note: Currently only list patterns are suported. vectors are not supported.
     assert.Pair(pattern);
-    const [arr /*, endSymbol */] = pairToArrayWithEnd(pattern);
-    // Note: Currently only flat patterns are supported.
-    const ellipsisIdx = arr.findIndex(item => is.Symbol(item) && item[1] === ellipsis);
-    const head = ellipsisIdx < 0 ? arr.slice(1) : arr.slice(1, ellipsisIdx - 1); // Note: ignore first position.
-    const tail = ellipsisIdx < 0 ? [] : arr.slice(ellipsisIdx + 1);
-    const variadic = ellipsisIdx < 0 ? null : arr[ellipsisIdx -1] ?? null;
-    // const end = is.Symbol(endSymbol) ? endSymbol[1] : null;
-    const patternObj: LISP.ISyntaxRulePattern = ["<syntax-rule-pattern>", head, variadic, tail/*, end*/];
-
-    ruleObjs.push([patternObj, template]);
+    // Note: Procedure calls can't handle improper list's last cdr.
+    // That means we can't handle patterns with root like:
+    //  (<pattern>... <pattern> <ellipsis> <pattern> ... . <pattern>)
+    // See Interpreter's execute method.
+    const [ps, end] = pairToArrayWithEnd(pattern);
+    if (!is.Null(end) && ps.some(p => is.Symbol(p) && p[1] === ellipsis)) {
+      throw create.Error("syntax-error", "The root of a syntax-rules pattern with ellipsis must be a proper list.");
+    } else {
+      ruleObjs.push([patternListToSyntaxRulePattern(pattern, ellipsis), template]);
+    }
   }
-
   return create.SyntaxRules(ellipsis, literalArray, ruleObjs);
 });
 
-// Note: Minimum suport for now.
-// Like apply, this procedure take a "syntax-rules" object and arguments,
-// then trys to match the arguments with patterns that the rules have.
-// Returns matched expression after replacing pattern-variables.
+
+// Sub function for matchPattern (Step sub function for use-syntax-rules)
+// Find all ther pattern variables in a pattern.
+const getPatternVariables = (pattern: LISP.ISyntaxRulePattern | LISP.Object, literals: string[]): string[] => {
+  if (is.SyntaxRulePattern(pattern)) {
+    const [, head, variadic, tail, end] = pattern;
+    const children = [
+      ...head,
+      ...(variadic ? [variadic] : [] ),
+      ...tail,
+      ...(end ? [end] : [] )
+    ];
+    return children.map(child => getPatternVariables(child, literals)).flat();
+  } else if (is.Symbol(pattern) && !literals.includes(pattern[1])) {
+    return pattern[1] === "_" ? [] : [pattern[1]];
+  } else {
+    return [];
+  }
+}
+
+// Sub function for use-syntax-rules.
+// Defines matching rule between pattern and input element for single object.
+// See R7RS 4.3.2. Very limited support for now.
+// When matched, returns a mapping from pattern variables to objects (excluding "_" if the keywords doesn't have it).
+// when unmatched, returns null.
+const matchPattern = (
+  pattern: LISP.ISyntaxRulePattern | LISP.Object,
+  expr: LISP.Object,
+  itrp: Interpreter,
+  callerNS: LISP.StaticNS,
+  calleeNS: LISP.StaticNS,
+  literals: string[],
+): Map<string, LISP.Object | LISP.Object[]> | null => {
+  if (is.SyntaxRulePattern(pattern)) {
+    // Case of root of the pattern or a nested pattern
+    if (!is.List(expr)) {
+      return null;
+    }
+    // Check if expr is null
+    const [, head, variadic, tail, end] = pattern;
+    if (is.Null(expr)) {
+      return (head.length === 0 && !variadic && tail.length === 0 && !end)
+        ? new Map()
+        : null;
+    }
+    // Check length of arguments
+    const [argsArray, argsEnd] = pairToArrayWithEnd(expr);
+    if (!!variadic || !!end) {
+      if (argsArray.length < head.length + tail.length) {
+        return null;
+      }
+    } else {
+      if (argsArray.length !== head.length + tail.length) {
+        return null;
+      }
+    }
+    // Make a parameter list that matches the length of arguments.
+    let params: (LISP.ISyntaxRulePattern | LISP.Object)[];
+    if (variadic) {
+      const variadicLength = argsArray.length - head.length - tail.length;
+      params = [...head, ...(Array(variadicLength).fill(variadic) as LISP.Object[]), ...tail];
+      if (end) {
+        params.push(end);
+        argsArray.push(argsEnd);
+      }
+    } else {
+      // Note: there are no "tail" if no variadic.
+      params = [...head];
+      if (end) {
+        params.push(end);
+        argsArray.push(arrayToList(argsArray.slice(head.length), argsEnd));
+      }
+    }
+
+    // Prepare arrays for variadic pattern-variables.
+    const result = new Map<string, LISP.Object | LISP.Object[]>();
+    if (variadic) {
+      getPatternVariables(variadic, literals).forEach(v => result.set(v, []));
+    }
+
+    // Try to match every arguments.
+    // If matched, the mappings are merged to results.
+    for (let i = 0; i < params.length; i++) {
+      const [p, a] = [params[i], argsArray[i]];
+      const ret = matchPattern(p, a, itrp, callerNS, calleeNS, literals);
+      if (!ret) {
+        return null;
+      }
+      if (p === variadic) {
+        for (const [k, v] of ret.entries()) {
+          const arr = result.get(k);
+          if (!arr || is.Object(arr)) {
+            throw create.Error("syntax-error", `Internal error: illegal behavior of syntax-rules. No array prepared for variadic variable "${k}".`);
+          }
+          if (is.Object(v)) {
+            result.set(k, [...arr, v])
+          } else {
+            result.set(k, [...arr, ...v])
+          }
+        }
+      } else {
+        for (const [k, v] of ret.entries()) {
+          if (result.has(k)) {
+            throw create.Error("syntax-error", "The same pattern variable appeared more than once in a pattern.");
+          } else {
+            result.set(k, v);
+          }
+        }
+      }
+    }
+    return result;
+  } else if (is.Symbol(pattern) && literals.includes(pattern[1])) {
+    // Case if literal identifiers.
+    // R7RS 4.3.2 says: Identifiers that appear in (literal ...) are interpreted as
+    // literal identifiers to be matched against corresponding elements of the input.
+    // An element in the input matches a literal identifier if and only if it is an
+    // identifier and either both its occurrence in the macro expression and its occurrence
+    // in the macro definition have the same lexical binding, or the two identifiers are
+    // the same and both have no lexical binding.
+    if (!is.Symbol(expr)) {
+      return null;
+    }
+    const obj1 = itrp.getStatic(calleeNS, pattern);
+    const obj2 = itrp.getStatic(callerNS, pattern);
+    if (pattern[1] === expr[1] && obj1 === obj2) {
+      return new Map();
+    } else {
+      return null;
+    }
+  } else if (is.Symbol(pattern)) { // Note: this includes the case of "_".
+    // Case of pattern variable or "_"
+    if (pattern[1] === "_") {
+      return new Map();
+    } else {
+      return new Map([[pattern[1], expr]])
+    }
+  } else if (equalQ.body({obj1: pattern, obj2: expr})[1]) {
+    // Case of pattern of literal datum.
+    return new Map();
+  } else {
+    // Maybe no case.
+    return null;
+  }
+}
+
+// Like apply,this procedure take a "syntax-rules" object and a list of arguments.
+// Trys to match the arguments with patterns that the rules have.
+// Returns a matched rule's expression after replacing pattern variables.
 const useSyntaxRules = defineBuiltInProcedure("use-syntax-rules", [
   { name: "spec" },
-  { name: "args", type: "variadic" }, // Like apply's arguments.
+  { name: "args" }, // List
 ], ({ spec, args }, itrp, stack): LISP.Object => {
   assert.SyntaxRules(spec);
-  assert.Objects(args);
+  assert.List(args);
   assertNonNull(itrp);
   assertNonNull(stack);
 
-   const [, ellipsis, literals, rules] = spec;
-  let argsArray: LISP.Object[];
-  if (args.length === 0) {
-    argsArray = [];
-  } else {
-    const [rest, last] = [args.slice(0, args.length -1), args[args.length -1]];
-    assert.List(last);
-    argsArray = [...rest, ...listToArray(last)];
-  }
-
-  // find matching pattern and make mappings from pattern-variable to object.
-  const map = new Map<string, LISP.Object | LISP.Object[]>();
-  let template: LISP.Object | null = null;
+  const [, ellipsis, literals, rules] = spec;
 
   // Get static namespace of the caller of macro.
   // Note: assume that the current call-stack is procedure created by define-syntax.
   // the parent call-stack is the caller.
-  const callerStaticNS = contentCS(parentCS(stack)!).env.static;
+  const callerNS = contentCS(parentCS(stack)!).env.static;
+  const calleeNS = contentCS(stack).env.static;
 
-  // This function is matching rule between pattern and input element for single object.
-  // See R7RS 4.3.2. Very limited support for now.
-  const matches = (p: LISP.Object, e: LISP.Object): boolean => {
-    if (is.Symbol(p) && literals.includes(p[1])) {
-      if (is.Symbol(e)) {
-        // Literal identifiers
-        // R7RS 4.3.2 says: Identifiers that appear in (hliterali . . . ) are interpreted as
-        // literal identifiers to be matched against corresponding elements of the input.
-        // An element in the input matches a literal identifier if and only if it is an
-        // identifier and either both its occurrence in the macro expression and its occurrence
-        // in the macro definition have the same lexical binding, or the two identifiers are
-        // the same and both have no lexical binding.
-        const obj1 = itrp.getStatic(callerStaticNS, p);
-        const obj2 = itrp.getStatic(callerStaticNS, p);
-        return p[1] === e[1] && obj1 === obj2;
-      } else {
-        return false;
-      }
-    } else if (is.Symbol(p)) { // Note: this includes the case of "_".
-      return true;
-    // } else if (isSyntaxRulePattern(p)) { // Note: limited support. Only flat patterns are supported,
-    // }
-    } else if (equalQ.body({obj1: p, obj2: e})[1]) { // Note: limited support. R7RS saids compare by "equals?"
-      return true;
-    } else {
-      return false;
-    }
-  }
   // Find matching rule against arguments.
-  for (const rule of rules) {
-    const [[, head, variadic, tail /*, end */]] = rule;
-    // Match number of parameters/arguments.
-    if (variadic ? (argsArray.length >= head.length + tail.length) : (argsArray.length === head.length + tail.length)) {
-      // Expand parameters to the length of exprs.
-      const variadicLength = argsArray.length - head.length - tail.length;
-      const params = [...head, ...(Array(variadicLength).fill(variadic) as LISP.Object[]), ...tail];
-      // Match position of keywords.
-      if (params.every((p, i) => matches(p, argsArray[i]))) {
-        // Found!.
-        // Prepare an array for variadic pattern variable
-        if (is.Symbol(variadic)) {
-          map.set(variadic[1], []);
-        }
-        // Set template and symbol mappings excluding "_".
-        template = rule[1];
-        for (let i = 0; i < params.length; i++) {
-          const p = params[i];
-          const e = argsArray[i];
-          if (is.Symbol(p) && p[1] !== "_") {
-            const v = map.get(p[1]);
-            if (!!v && !is.Object(v)) {
-              v.push(e); // Note: this must be a variadic parameter.
-            } else {
-              map.set(p[1], e);
-            }
-          }
-        }
+  let mappings: NonNullable<ReturnType<typeof matchPattern>>;
+  let template: LISP.Object;
+  {
+    let ret, tmpl;
+    for (const rule of rules) {
+      if ((ret = matchPattern(rule[0], args, itrp, callerNS, calleeNS, literals))) {
+        tmpl = rule[1];
         break;
       }
     }
-  }
-  if (!template) {
-    throw create.Error("syntax-rules-unmatch", "No rules match arguments.");
+    if (!ret || !tmpl) {
+      throw create.Error("syntax-error", "No rules match arguments.");
+    }
+    [mappings, template] = [ret, tmpl];
   }
 
   // build object from template replacing pattern-variable according to the mappings.
@@ -883,9 +986,9 @@ const useSyntaxRules = defineBuiltInProcedure("use-syntax-rules", [
   const fn = (tmpl: LISP.Object): LISP.Object => {
     if (is.Pair(tmpl)) {
       const [, car, cdr] = tmpl;
-      if (is.Symbol(car) && map.has(car[1]) && is.Symbol(cdr[1]) && cdr[1][1] === ellipsis) {
+      if (is.Symbol(car) && mappings.has(car[1]) && is.Symbol(cdr[1]) && cdr[1][1] === ellipsis) {
         // (xxxx symbol ... yyy) => (xxxx v1 v2 v3 yyyyy)
-        const v = map.get(car[1]);
+        const v = mappings.get(car[1]);
         if (!v || is.Object(v)) {
           throw create.Error("syntax-error", `Pattern variable "${car[1]} is not variadic." `);
         }
@@ -898,9 +1001,9 @@ const useSyntaxRules = defineBuiltInProcedure("use-syntax-rules", [
           return create.Pair(fn(car), fn(cdr));
         }
       }
-    } else if (is.Symbol(tmpl) && map.has(tmpl[1])) {
+    } else if (is.Symbol(tmpl) && mappings.has(tmpl[1])) {
       // Replacement of pattern variables, except variadic.
-      const v = map.get(tmpl[1])!;
+      const v = mappings.get(tmpl[1])!;
       if (!is.Object(v)) {
         throw create.Error("syntax-error", `Pattern variable "${tmpl[1]}" must be variadic. (add "${ellipsis}" after the symbol)" `);
       }

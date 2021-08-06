@@ -425,18 +425,18 @@
           (begin expr dots)))))))
 (be-like-begin3 sequence3)
 (test 5 (sequence3 2 3 4 5))
-;
-;X[not flat syntax-rule]
-;X ;; Syntax pattern with ellipsis in middle of proper list.
-;X (define-syntax part-2
-;X   (syntax-rules ()
-;X     ((_ a b (m n) ... x y)
-;X      (vector (list a b) (list m ...) (list n ...) (list x y)))
-;X     ((_ . rest) 'error)))
-;X (test '#((10 43) (31 41 51) (32 42 52) (63 77))
-;X     (part-2 10 (+ 21 22) (31 32) (41 42) (51 52) (+ 61 2) 77))
-;X
-;X ;; Syntax pattern with ellipsis in middle of improper list.
+
+;; Syntax pattern with ellipsis in middle of proper list.
+(define-syntax part-2
+  (syntax-rules ()
+    ((_ a b (m n) ... x y)
+     (vector (list a b) (list m ...) (list n ...) (list x y)))
+    ((_ . rest) 'error)))
+(test '#((10 43) (31 41 51) (32 42 52) (63 77))
+    (part-2 10 (+ 21 22) (31 32) (41 42) (51 52) (+ 61 2) 77))
+
+;; Syntax pattern with ellipsis in middle of improper list.
+;X[syntax-rules pattern with root with ellipsis with end ]
 ;X (define-syntax part-2x
 ;X   (syntax-rules ()
 ;X     ((_ a b (m n) ... x y . rest)
@@ -447,18 +447,17 @@
 ;X     (part-2x 10 (+ 21 22) (31 32) (41 42) (51 52) (+ 61 2) 77))
 ;X (test '#((10 43) (31 41 51) (32 42 52) (63 77) ("rest:" . "tail"))
 ;X     (part-2x 10 (+ 21 22) (31 32) (41 42) (51 52) (+ 61 2) 77 . "tail"))
-;X
-;X[syntax-rule with improper list]
-;X
-;X;; underscore
-;X(define-syntax count-to-2
-;X  (syntax-rules ()
-;X    ((_) 0)
-;X    ((_ _) 1)
-;X    ((_ _ _) 2)
-;X    ((_ . _) 'many)))
-;X(test '(2 0 many)
-;X    (list (count-to-2 a b) (count-to-2) (count-to-2 a b c d)))
+
+;; underscore
+(define-syntax count-to-2
+  (syntax-rules ()
+    ((_) 0)
+    ((_ _) 1)
+    ((_ _ _) 2)
+    ((_ . _) 'many)))
+(test '(2 0 many)
+    (list (count-to-2 a b) (count-to-2) (count-to-2 a b c d)))
+
 (define-syntax count-to-2x
   (syntax-rules ()
     ((_) 0)
@@ -467,16 +466,15 @@
 (test '(2 0 1)
   (list (count-to-2x a b) (count-to-2x) (count-to-2x a)))
 
-;X[syntax-rule with improper list]
-;X(define-syntax count-to-2_
-;X  (syntax-rules (_)
-;X    ((_) 0)
-;X    ((_ _) 1)
-;X    ((_ _ _) 2)
-;X    ((x . y) 'fail)))
-;X(test '(2 0 fail fail)
-;X    (list (count-to-2_ _ _) (count-to-2_)
-;X          (count-to-2_ a b) (count-to-2_ a b c d)))
+(define-syntax count-to-2_
+  (syntax-rules (_)
+    ((_) 0)
+    ((_ _) 1)
+    ((_ _ _) 2)
+    ((x . y) 'fail)))
+(test '(2 0 fail fail)
+    (list (count-to-2_ _ _) (count-to-2_)
+          (count-to-2_ a b) (count-to-2_ a b c d)))
 
 (define-syntax jabberwocky
   (syntax-rules ()

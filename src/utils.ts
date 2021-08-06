@@ -224,6 +224,7 @@ export const is = {
   Record: (o: unknown): o is LISP.IRecord => (o instanceof Array && (o[0] === "<record>")),
   MultiValue: (o: unknown): o is LISP.IMultiValue => (o instanceof Array && (o[0] === "<multi-value>")),
   SyntaxRules: (o: unknown): o is LISP.ISyntaxRules => (o instanceof Array && o[0] === "<syntax-rules>"),
+  SyntaxRulePattern: (o: unknown): o is LISP.ISyntaxRulePattern => (o instanceof Array && o[0] === "<syntax-rule-pattern>"),
   Parameter: (o: unknown): o is LISP.IParameter => (o instanceof Array && o[0] === "<parameter>"),
   EnvironmentSpec: (o: unknown): o is LISP.IEnvironmentSpec => (o instanceof Array && o[0] === "<environment-spec>"),
   Exception: (o: unknown): o is LISP.IException => (o instanceof Array && o[0] === "<exception>"),

@@ -22,9 +22,10 @@ $ npm install cumalis-lisp
   * make-parameter / parameterize.
   * define-record-type.
   * let-values / values.
-  * limited support for syntax-rules (see Limitations).
+  * syntax-rules with nested patterns.
   * quasiquote.
   * nested multiline comments.
+  * datum tags.
   * etc.
 - Standard libraries in R7RS (small) except (scheme complex) are implemented.
   * (scheme base) -- imported by default.
@@ -175,33 +176,32 @@ Note: If you want to serialize / deserialize suspended continuations, open files
 [Revised7 Report on the Algorithmic Language Scheme](https://github.com/johnwcowan/r7rs-spec/blob/errata/spec/r7rs.pdf)
 
 ## Limitations
-
-  - About number:
-    * Only integer and real number is supported. Complex / fraction number is not implemented.
-    * Standard library (scheme complex) is not implemented.
-    * 1.0 and 1 is same value. (like Javascript's number primitive).
-    * "exact" means Number.isSafeInteger is true in Javascript.
-      - "exact" procedure trys to convert float numbers to safe-integer. It raises an error if it fails.
-      - "inexact" procedure does nothing than returning the given value.
-    * In S-expressions, hexadecimal, octal, binary literals can't have digits.
-  - Limited syntax-rules support:
-    * Only lists are supported for now. No vector rules.
-    * Only flat patterns are supported. No nested patterns.
-    * Improper list patterns are not supported.
-  - About environment:
-    * (scheme base) library is imported by default. importing "(scheme base)" is just ignored.
-    * (scheme base) is imported by default even if (environment) (null-environment) (scheme-report-environment 5).
-    * (environment) doesn't make "immutable binding".
-  - Limited support for importing / exporting libraries:
-    * "import" can only import built-in libraries at the top-level.
-    * Importing with "only" "except" "prefix" "rename" is not supported.
-    * "define-library" "cond-expand" "include" and "include-cli" are not implemented.
-      (But you can define your own "built-in" procedures and libraries.)
-  - About Strings:
-    * (eqv? "aaa" "aaa") returns #t. (like Javascript's "aaa" === "aaa" returns true).
-  - About file library:
-    * char-ready? u8-ready? raise errors for file ports. Because Node.js doesn't seem to have any ftell(3) equivalent.
-    * read-char read-line etc. may block until complete reading.
+### About number
+  * Only integer and real number is supported. Complex / fraction number is not implemented.
+  * Standard library (scheme complex) is not implemented.
+  * 1.0 and 1 is same value. (like Javascript's number primitive).
+  * "exact" means Number.isSafeInteger is true in Javascript.
+    - "exact" procedure trys to convert float numbers to safe-integer. It raises an error if it fails.
+    - "inexact" procedure does nothing than returning the given value.
+  * In S-expressions, hexadecimal, octal, binary literals can't have digits.
+### About syntax-rules
+  * Pattern with vectors is not supported.
+### About procedure call
+  * Procedure call must be a proper list. The last cdr of procedure call will be ignored.
+  * Defining syntax-rules pattern to call procedure with improper list raises syntax-error.
+### About environment
+  * (scheme base) library is imported by default. importing "(scheme base)" is just ignored.
+  * (scheme base) is imported by default even if (environment) (null-environment) (scheme-report-environment 5).
+  * (environment) doesn't make "immutable binding".
+### About library
+  * "import" can only import built-in libraries at the top-level.
+  * Importing with "only" "except" "prefix" "rename" is not supported.
+  * "define-library" "cond-expand" "include" and "include-cli" are not implemented. But you can define your own "built-in" procedures and libraries.
+### About String
+  * (eqv? "aaa" "aaa") returns #t. (like Javascript's "aaa" === "aaa" returns true).
+### About file library
+  * char-ready? u8-ready? raise errors for file ports. Because Node.js doesn't seem to have any ftell(3) equivalent.
+  * read-char read-line etc. may block until complete reading.
 
 ## Notes
 

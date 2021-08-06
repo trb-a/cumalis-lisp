@@ -17,6 +17,8 @@ export const eqvQ = defineBuiltInProcedure("eqv?", [
       return (v as any[]).slice(0, v.length -1);
     } else if (is.Pair(v)) {
       return (v as any[]).slice(0, 3);
+    } else if (is.Symbol(v)) {
+      return (v as any[]).slice(0, 2);
     } else {
       return v;
     }

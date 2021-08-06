@@ -87,6 +87,7 @@ export declare const is: {
     Record: (o: unknown) => o is LISP.IRecord;
     MultiValue: (o: unknown) => o is LISP.IMultiValue;
     SyntaxRules: (o: unknown) => o is LISP.ISyntaxRules;
+    SyntaxRulePattern: (o: unknown) => o is LISP.ISyntaxRulePattern;
     Parameter: (o: unknown) => o is LISP.IParameter;
     EnvironmentSpec: (o: unknown) => o is LISP.IEnvironmentSpec;
     Exception: (o: unknown) => o is LISP.IException;

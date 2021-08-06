@@ -113,7 +113,27 @@ const defineValues = defineBuiltInProcedure("define-values", [
 // Not only the wrapper procedure,"literal-identifiers" are defined as a
 // variable with undefined value if the variable is not defined. This enables
 // evaluation of arguments and matching with the identifier.
+// Note: To enable recursive call, define/bind the keyword at first
+// and then evaluate "spec" argument using define-syntax-1.
 const defineSyntax = defineBuiltInProcedure("define-syntax", [
+  { name: "keyword", evaluate: false },
+  { name: "spec", evaluate: false }
+], ({ keyword, spec }, itrp, stack): LISP.Object => {
+  assert.Symbol(keyword);
+  assert.Object(spec);
+  assertNonNull(itrp);
+  assertNonNull(stack);
+  const isTopLevel = nextStack(contentCS(stack).env.static) ? false : true;
+  if (!isTopLevel && !is.Undefined(contentStack(contentCS(stack).env.static)[keyword[1]] ?? ["<undefined>"])) {
+    throw create.Error("redefine-variable", null);
+  }
+  itrp.defineStatic(contentCS(stack).env.static, keyword, create.Undefined());
+  return forms.CallBuiltIn("define-syntax-1", keyword, spec);
+}, true);
+
+// Hidden procedure
+// Support procedure for define-syntax.
+const defineSyntax1 = defineBuiltInProcedure("define-syntax-1", [
   { name: "keyword", evaluate: false },
   { name: "spec" }
 ], ({ keyword, spec }, itrp, stack): LISP.Object => {
@@ -121,10 +141,6 @@ const defineSyntax = defineBuiltInProcedure("define-syntax", [
   assert.SyntaxRules(spec);
   assertNonNull(itrp);
   assertNonNull(stack);
-  const isTopLevel = nextStack(contentCS(stack).env.static) ? false : true;
-  if (!isTopLevel && !is.Undefined(contentStack(contentCS(stack).env.static)[keyword[1]] ?? ["<undefined>"])) {
-    throw create.Error("redefine-variable", null);
-  }
   const proc = create.Procedure("lambda",
     [{ name: "exprs", type: "variadic", evaluate: false }],
     forms.CallBuiltIn("use-syntax-rules",
@@ -136,7 +152,7 @@ const defineSyntax = defineBuiltInProcedure("define-syntax", [
   );
   itrp.defineStatic(contentCS(stack).env.static, keyword, proc);
   return ["<undefined>"];
-});
+}, false, true);
 
 const defineRecordType = defineBuiltInProcedure("define-record-type", [
   { name: "name", evaluate: false },
@@ -279,6 +295,6 @@ const recordSetD = defineBuiltInProcedure("record-set!", [
 
 export const procedures = {
   Import,
-  define, defineValues, defineSyntax, defineRecordType,
+  define, defineValues, defineSyntax, defineSyntax1, defineRecordType,
   makeRecord, recordTypeQ, recordGet, recordSetD,
 };

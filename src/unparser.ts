@@ -54,7 +54,7 @@ export const fromTokensToString = (tokens: LISP.Token[]): string => {
       ? curr.replace(/^""/, "").replace(/""$/, "")
       : curr;
     const space = (
-      ret === "" || prev.slice(0, 1) === "(" || curr.slice(-1) === ")" ||
+      ret === "" || prev.slice(-1) === "(" || curr === ")" ||
       Object.values(Quotings).indexOf(prev) >= 0 ||
       (/^#\d+=$/.test(prev) && curr === "(")
     ) ? "" : " ";

@@ -161,8 +161,28 @@ export class Interpreter {
     procedure: {} as Dictionary<BuiltInProcedureDefinition>,
     port: {
       "//input": {},
-      "//output": { write: (str) => logger.log(str) },
-      "//error": { write: (str) => logger.warn(str) },
+      "//output": {
+        write: (str) => {
+          if (process?.stdout?.write) {
+            // Node.js
+            process.stdout.write(str);
+          } else {
+            // Browsers
+            logger.log(str);
+          }
+        }
+      },
+      "//error": {
+        write: (str) => {
+          if (process?.stderr?.write) {
+            // Node.js
+            process.stderr.write(str);
+          } else {
+            // Browsers
+            logger.warn(str);
+          }
+        }
+      },
     } as Dictionary<BuiltInPortDefinition>,
     static: {
       "current-input-port": create.Parameter("current-input-port", null),
