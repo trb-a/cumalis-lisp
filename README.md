@@ -230,8 +230,6 @@ Please include informaton:
 
 Pull requests are accepted on [Github](https://github.com/trb-a/cumalis-lisp/pulls).
 
-###
-
 ## TODOs / Future plans
 
   - Better documentation (especially Javascript interfaces more).
