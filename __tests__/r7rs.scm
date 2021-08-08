@@ -8,7 +8,7 @@
         (scheme char)
         (scheme lazy)
         (scheme inexact)
-;X[Some libraries are not implemented.]
+;X[Complex is not implemented.]
 ;X        (scheme complex)
         (scheme time)
         (scheme file)
@@ -1716,7 +1716,7 @@
   (test "should be a number" (get-output-string out))
   (test 65 value))
 
-;X;; From SRFI-34 "Examples" section - #3
+;; From SRFI-34 "Examples" section - #3
 (define (test-exception-handler-3 v out)
   (guard (condition
           (else
@@ -1798,7 +1798,7 @@
       (f + 10)))
 
 (test 1024 (eval '(expt 2 10) (environment '(scheme base))))
-;X ;; (sin 0) may return exact number
+;; (sin 0) may return exact number
 (test 0.0 (inexact (eval '(sin 0) (environment '(scheme inexact)))))
 ;; ditto
 (test 1024.0 (eval '(+ (expt 2 10) (inexact (sin 0)))
@@ -2401,6 +2401,75 @@
     (eval 'y env)))
 
 ; Note: test for (scheme load) library.is in index.test.ts
+
+(test-end)
+
+(test-begin "cond-expand")
+
+(test #t (cond-expand
+          (r7rs #t)
+          (else #f)))
+(test #t (cond-expand
+          ((library (scheme write)) #t)
+          (else #f)))
+(test #t (cond-expand
+          ((not r6rs) #t)
+          (else #f)))
+(test #t (cond-expand
+          ((and r7rs (library (scheme write))) #t)
+          (else #f)))
+(test #t (cond-expand
+          ((or r6rs r7rs) #t)
+          (else #f)))
+(cond-expand
+ (r7rs (test #t #t))
+ (else (test #t #f)))
+(cond-expand
+ ((library (scheme write)) (test #t #t))
+ (else (test #t #f)))
+(cond-expand
+ ((not r6rs) (test #t #t))
+ (else (test #t #f)))
+(cond-expand
+ ((and r7rs (library (picrin test))) (test #t #t))
+ (else (test #t #f)))
+(cond-expand
+ ((or r6rs r7rs) (test #t #t))
+ (else (test #t #f)))
+
+(test-end)
+
+
+
+(test-begin "define-library")
+
+(define-library (test lib)
+    (import (scheme base))
+    (export foo1 foo2)
+    (export (rename foo3 bar3) (rename foo4 bar4))
+    (begin
+      (define (foo1 a) (+ a 10))
+      (define (foo2 a) (- a 10))
+      (define (foo3 a) (* a 10))
+      (define (foo4 a) (/ a 10))))
+; IMPROVEME: include test for include/include-cli/include/cond-expand/include-library-declarations
+
+(import
+  (prefix
+    (rename
+      (except
+        (only (test lib)
+          foo1 foo2 bar3)
+        foo2)
+      (foo1 bar1) (bar3 baz3))
+    my-))
+
+(test 12 (my-bar1 2))
+(test 40 (my-baz3 4))
+
+(test #t (error-object? (guard (exn (else exn)) (bar4 1) )))
+
+(test #t (error-object? (guard (exn (else exn)) (my-foo2 5) )))
 
 (test-end)
 

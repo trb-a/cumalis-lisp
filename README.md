@@ -15,10 +15,11 @@ $ npm install cumalis-lisp
 
 ## Features
 
-- Implemented most of R7RS (small) including:
+- Implemented almost all of R7RS (small) except complex/fraction numbers, including:
   * call-with-current-continuation (call/cc).
   * guard / with-exception-handler / raise / raise-continuable.
   * dynamic-wind.
+  * define-library / import.
   * make-parameter / parameterize.
   * define-record-type.
   * let-values / values.
@@ -185,29 +186,52 @@ Note: If you want to serialize / deserialize suspended continuations, open files
     - "inexact" procedure does nothing than returning the given value.
   * In S-expressions, hexadecimal, octal, binary literals can't have digits.
 ### About syntax-rules
-  * Pattern with vectors is not supported.
+  * Patterns with vectors are not supported.
 ### About procedure call
   * Procedure call must be a proper list. The last cdr of procedure call will be ignored.
   * Defining syntax-rules pattern to call procedure with improper list raises syntax-error.
 ### About environment
-  * (scheme base) library is imported by default. importing "(scheme base)" is just ignored.
+  * (scheme base) library is imported by default. Importing "(scheme base)" is just ignored.
   * (scheme base) is imported by default even if (environment) (null-environment) (scheme-report-environment 5).
-  * (environment) doesn't make "immutable binding".
+  * (environment) doesn't make immutable bindings.
 ### About library
-  * "import" can only import built-in libraries at the top-level.
-  * Importing with "only" "except" "prefix" "rename" is not supported.
-  * "define-library" "cond-expand" "include" and "include-cli" are not implemented. But you can define your own "built-in" procedures and libraries.
-### About String
+  * "import" doesn't make immutable bindings.
+### About string
   * (eqv? "aaa" "aaa") returns #t. (like Javascript's "aaa" === "aaa" returns true).
 ### About file library
   * char-ready? u8-ready? raise errors for file ports. Because Node.js doesn't seem to have any ftell(3) equivalent.
   * read-char read-line etc. may block until complete reading.
 
 ## Notes
-
+  - include / include-cli (or load etc.) always read files from the path relative to the current working directory.
   - toReferentialJSON / fromReferentialJSON don't respect "toJSON" property of class instances. If you want to include class instances in serialization, please consider other serializers like js-yaml, etc.
   - exit / emergency-exit does't do process.exit() but throws an Envelope object that isExitEnvelope() returns true, so that users can catch it and  perform proper finalizations.
- 
+
+## Contributing
+
+Contributions are welcome.
+
+### Bug reports
+
+Bugs are tracked in the project's [issue tracker](https://github.com/trb-a/cumalis-lisp/issues).
+
+Please read Limitations on this README before you submit.
+
+Please include informaton:
+  * Expected outcome
+  * Actual outcome.
+  * Your running environment. At least:
+    - Cumalis Lisp's version.
+    - Node.js version or/and browser name and version.
+    - Operating system's name and version.
+  * If possible, URL of [CodeSandbox](https://codesandbox.io/) that can reproduce the bug.
+
+### Pull requests
+
+Pull requests are accepted on [Github](https://github.com/trb-a/cumalis-lisp/pulls).
+
+###
+
 ## TODOs / Future plans
 
   - Better documentation (especially Javascript interfaces more).

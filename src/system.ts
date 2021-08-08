@@ -34,7 +34,7 @@ import { name as PACKAGE_NAME, version as PACKAGE_VERSION} from "../package.json
 // (jiffies-per-second) time library procedure
 
 
-const features = defineBuiltInProcedure("features", [
+export const features = defineBuiltInProcedure("features", [
 ], () => {
   return create.List(
     create.Symbol("r7rs"),

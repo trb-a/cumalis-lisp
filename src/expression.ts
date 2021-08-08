@@ -11,7 +11,10 @@
 
 import { equalQ, eqvQ } from "./equivalence";
 import type { Interpreter } from "./interpreter";
+import { readFile } from "./misc";
+import { features } from "./system";
 import { LISP } from "./types";
+import { writeObject } from "./unparser";
 import { assertArray, assertNonNull, assert, is, contentCS, create, defineBuiltInProcedure, formalsToParameters, forms, arrayToList, listToArray, pairToArrayWithEnd, transferCS, uniqueId, contentStack, parentCS, forkCS, addStaticNS } from "./utils";
 
 const quote = defineBuiltInProcedure("quote", [
@@ -74,10 +77,42 @@ const setD = defineBuiltInProcedure("set!", [
   }
   return ["<undefined>"];
 });
-// IMPOROVEME
-// Library feature is not supported yet
-// include
-// include-cli
+
+// Note: include and include-cli always read files from the path relative to the current working directory.
+const include = defineBuiltInProcedure("include", [
+  { name: "str1" },
+  { name: "strs", type: "variadic" }
+], ({ str1, strs }, itrp, stack) => {
+  assertNonNull(itrp);
+  assertNonNull(stack);
+  assert.String(str1);
+  assert.Strings(strs);
+  const filenames = [str1, ...strs];
+  const exprs = filenames.map(filename => readFile.body({filename}, itrp));
+  if (exprs.length === 1) {
+    return exprs[0];
+  } else {
+    return forms.Begin(...exprs);
+  }
+}, true);
+
+const includeCli = defineBuiltInProcedure("include-cli", [
+  { name: "str1" },
+  { name: "strs", type: "variadic" }
+], ({ str1, strs }, itrp, stack) => {
+  assertNonNull(itrp);
+  assertNonNull(stack);
+  assert.String(str1);
+  assert.Strings(strs);
+  const filenames = [str1, ...strs];
+  const exprs = filenames.map(filename => readFile.body({ filename, cli: create.Boolean(true) }, itrp));
+  if (exprs.length === 1) {
+    return exprs[0];
+  } else {
+    return forms.Begin(...exprs);
+  }
+}, true);
+
 const cond = defineBuiltInProcedure("cond", [
   { name: "clause", evaluate: false },
   { name: "clauses", type: "variadic", evaluate: false },
@@ -210,8 +245,52 @@ const unless = defineBuiltInProcedure("unless", [
   }
 }, true);
 
-// library features are not supported yet.
-// cond-expand
+export const condExpand = defineBuiltInProcedure("cond-expand", [
+  {name: "clause1", evaluate: false}, // required
+  {name: "clauses", type: "variadic", evaluate: false}
+], ({ clause1, clauses }, itrp, stack) => {
+  assert.Pair(clause1);
+  assert.Pairs(clauses);
+  assertNonNull(itrp);
+  assertNonNull(stack);
+  const clauseArray = [clause1, ...clauses];
+  const featureArray = listToArray(features.body());
+  const fn = (requirement: LISP.Object): boolean => {
+    if (is.Symbol(requirement)) {
+      return featureArray.some(ft => is.Symbol(ft) && ft[1] === requirement[1]);
+    } else if (is.Pair(requirement)) {
+      const [, car, cdr] = requirement;
+      if (is.Symbol(car) && is.List(cdr)) {
+        if (car[1] === "and") {
+          return listToArray(cdr).every(item => fn(item))
+        } else if (car[1] === "or") {
+          return listToArray(cdr).some(item => fn(item))
+        } else if (car[1] === "not") {
+          if (is.Pair(cdr)) {
+            return !fn(cdr[1]);
+          }
+        } else if (car[1] === "library") {
+          if (is.Pair(cdr)) {
+            const str = writeObject(cdr[1]);
+            if (itrp.getBuiltInLibrary(str)) {
+              return true;
+            } else {
+              const ret = itrp.getStatic(contentCS(stack).env.static, create.Symbol(str));
+              return is.Library(ret);
+            }
+          }
+        }
+      }
+    }
+    return false;
+  };
+  const found = clauseArray.find(cl => fn(cl[1]));
+  if (found) {
+    return create.Pair(create.Procedure("built-in", "begin"), found[2]);
+  } else {
+    return create.Undefined();
+  }
+}, true);
 
 // Note: "let" has 2 different syntax.
 //  1. (let <bindings> <body>...
@@ -415,7 +494,7 @@ const begin = defineBuiltInProcedure("begin", [
   }
 }, true);
 
-// Note: 
+// Note:
 const Do = defineBuiltInProcedure("do", [
   {name: "specs", evaluate: false},
   {name: "clause", evaluate: false},
@@ -1025,8 +1104,7 @@ const syntaxError = defineBuiltInProcedure("syntax-error", [
 });
 
 export const procedures = {
-  quote, lambda, If, setD, cond, Case, and, or, when, unless, Let, LetStar, letrecStar,
+  quote, lambda, If, setD, include, includeCli, cond, Case, and, or, when, unless, condExpand, Let, LetStar, letrecStar,
   letrec, letValues, letStarValues, begin, Do, makeParameter, parameterize, defineParameter, defineParameter1,
   guard, quasiquote, quasiquote1, letSyntax, letrecSyntax, syntaxRules, applySyntaxRules: useSyntaxRules, syntaxError,
-  // include, includeCli
 };

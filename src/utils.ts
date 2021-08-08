@@ -154,6 +154,7 @@ export const create = {
   Error: (name: string, message: string | null, irritants: LISP.Object[] = []): LISP.IError => ["<error>", name, message, irritants],
   Continuation: (...args: ExceptFirst<LISP.IContinuation>): LISP.IContinuation => ["<continuation>", ...args],
   EnvironmentSpec: (...args: ExceptFirst<LISP.IEnvironmentSpec>): LISP.IEnvironmentSpec => ["<environment-spec>", ...args],
+  Library: (...args: ExceptFirst<LISP.ILibrary>): LISP.ILibrary => ["<library>", ...args],
   JS: (...args: ExceptFirst<LISP.IJS>): LISP.IJS => ["<js>", ...args],
   List: (...args: LISP.Object[]): LISP.List => (
     args.reverse().reduce<LISP.List>((prev, curr) => ["<pair>", curr, prev, false], ["<null>"])
@@ -232,6 +233,7 @@ export const is = {
   Promise: (o: unknown): o is LISP.IPromise => (o instanceof Array && o[0] === "<promise>"),
   Error: (o: unknown): o is LISP.IError => (o instanceof Array && o[0] === "<error>"),
   Continuation: (o: unknown): o is LISP.IContinuation => (o instanceof Array && (o[0] === "<continuation>")),
+  Library: (o: unknown): o is LISP.ILibrary => (o instanceof Array && (o[0] === "<library>")),
   JS: (o: unknown): o is LISP.IJS => o instanceof Array && o[0] === "<js>",
   // Abstracted
   List: (v: unknown): v is LISP.List => is.Pair(v) || is.Null(v),
@@ -299,6 +301,7 @@ export const assert: {
   Record: (v: any, message?: string | undefined) => asserts v is LISP.IRecord;
   MultiValue: (v: any, message?: string | undefined) => asserts v is LISP.IMultiValue;
   Port: (v: any, message?: string | undefined) => asserts v is LISP.IPort;
+  Library: (v: any, message?: string | undefined) => asserts v is LISP.ILibrary;
   // Array of object
   Lists: (vs: any, message?: string | undefined) => asserts vs is LISP.List[];
   Pairs: (vs: any, message?: string | undefined) => asserts vs is LISP.IPair[];
@@ -337,6 +340,7 @@ export const assert: {
   Record: makeAsserter(is.Record, "A <record> is expected."),
   MultiValue: makeAsserter(is.MultiValue, "A <multi-value> is expected."),
   Port: makeAsserter(is.Port, "A <port> is expected."),
+  Library: makeAsserter(is.Library, "A <library> is expected."),
   // Array of object
   Lists: makeArrayAsserter(is.List, "An array of <pair>/<null> is expected."),
   Pairs: makeArrayAsserter(is.Pair, "An array of <pair> is expected."),
@@ -372,7 +376,7 @@ export const isDictionary = (o: unknown): o is Dictionary<any> => (
   (typeof o === "object" && o !== null && o.constructor.name === "Object")
 );
 
-// export const isOneOf = <T extends readonly any[]>(o: unknown, arr: T): o is T[number] => arr.includes(o);
+export const isOneOf = <T extends readonly any[]>(o: unknown, arr: T): o is T[number] => arr.includes(o);
 
 // Envelope
 

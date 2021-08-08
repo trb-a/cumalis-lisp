@@ -9,17 +9,25 @@ const caseLambda = defineBuiltInProcedure("case-lambda", [
   assert.Pairs(clauses);
   const args = uniqueId();
   const len = uniqueId();
-  return fromJS(["lambda", args,
-    ["define", len, ["length", args]],
-    ["cond",
+
+  // IMPROVEME: rewrite this not using fromJS.
+  const lambda = create.Procedure("built-in", "lambda");
+  const cond = create.Procedure("built-in", "cond");
+  const define = create.Procedure("built-in", "define");
+  const apply = create.Procedure("built-in", "apply");
+  const error = create.Procedure("built-in", "error");
+
+  return fromJS([lambda, args,
+    [define, len, ["length", args]],
+    [cond,
       ...clauses.map(([, formals, body]) => {
         const [ups, vp] = formalsToParameters(formals);
         return [
           [(vp ? ">=" : "="), len, ups.length],
-          ["apply", ["lambda", formals, ...body], args],
+          [apply, ["lambda", formals, ...body], args],
         ];
       }),
-      ["else", ["error", `"No matching clause for case-lambda"`]]
+      ["else", [error, `"No matching clause for case-lambda"`]]
     ]
   ]);
 }, true, true);

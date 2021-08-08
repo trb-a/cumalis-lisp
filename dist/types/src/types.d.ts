@@ -75,9 +75,10 @@ export declare namespace LISP {
     type IError = [className: "<error>", name: string, message: string | null, irritants: Object[]];
     type IContinuation = [className: "<continuation>", stack: CallStack];
     type ISyntaxRulePattern = [className: "<syntax-rule-pattern>", head: (Object | ISyntaxRulePattern)[], variadic: (Object | ISyntaxRulePattern) | null, tail: (Object | ISyntaxRulePattern)[], end: (Object | ISyntaxRulePattern) | null];
-    type ISyntaxRules = [className: "<syntax-rules>", ellipsis: string, literals: string[], rules: [ISyntaxRulePattern, LISP.Object][]];
+    type ISyntaxRules = [className: "<syntax-rules>", ellipsis: string, literals: string[], rules: [ISyntaxRulePattern, Object][]];
     type IParameter = [className: "<parameter>", name: string, converter: Procedure | null];
-    type IEnvironmentSpec = [className: "<environment-spec>", env: LISP.Env];
+    type IEnvironmentSpec = [className: "<environment-spec>", env: Env];
+    type ILibrary = [className: "<library>", exports: Dictionary<string>, env: Env];
     type IJS = ([
         "<js>",
         "built-in",
@@ -87,7 +88,7 @@ export declare namespace LISP {
         "inline",
         any
     ]);
-    type Object = Symbol | String | Number | Boolean | Character | List | Vector | ByteVector | EndOfFile | Procedure | Port | RecordType | Record | MultiValue | SyntaxRules | Exception | Undefined | Promise | Error | EnvironmentSpec | JS;
+    type Object = Symbol | String | Number | Boolean | Character | List | Vector | ByteVector | EndOfFile | Procedure | Port | RecordType | Record | MultiValue | SyntaxRules | Exception | Undefined | Promise | Error | EnvironmentSpec | Library | JS;
     type Symbol = ISymbol;
     type String = IString;
     type Number = INumber;
@@ -112,6 +113,7 @@ export declare namespace LISP {
     type Exception = IException;
     type Undefined = IUndefined;
     type Promise = IPromise;
+    type Library = ILibrary;
     type JS = IJS;
     type RealNumber = INumber & {
         1: number;

@@ -11,4 +11,5 @@ export declare const procedures: {
     recordTypeQ: import("./interpreter").BuiltInProcedureDefinition<"type" | "rec", ({ rec, type }: Partial<Record<"type" | "rec", LISP.Object | LISP.Object[] | null>>) => LISP.Object>;
     recordGet: import("./interpreter").BuiltInProcedureDefinition<"rec" | "field", ({ rec, field }: Partial<Record<"rec" | "field", LISP.Object | LISP.Object[] | null>>) => LISP.Object>;
     recordSetD: import("./interpreter").BuiltInProcedureDefinition<"value" | "rec" | "field", ({ rec, field, value }: Partial<Record<"value" | "rec" | "field", LISP.Object | LISP.Object[] | null>>) => LISP.Object>;
+    defineLibrary: import("./interpreter").BuiltInProcedureDefinition<"name" | "decls", ({ name, decls }: Partial<Record<"name" | "decls", LISP.Object | LISP.Object[] | null>>, itrp: import("./interpreter").Interpreter | undefined, stack: LISP.CallStack | undefined) => LISP.CallStack>;
 };

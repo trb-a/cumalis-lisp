@@ -39,6 +39,7 @@ export declare const create: {
     Error: (name: string, message: string | null, irritants?: LISP.Object[]) => LISP.IError;
     Continuation: (stack: LISP.CallStack) => LISP.IContinuation;
     EnvironmentSpec: (env: LISP.Env) => LISP.IEnvironmentSpec;
+    Library: (exports: Dictionary<string>, env: LISP.Env) => LISP.ILibrary;
     JS: (...args: ExceptFirst<LISP.IJS>) => LISP.IJS;
     List: (...args: LISP.Object[]) => LISP.List;
     Suspend: (continuation: LISP.IContinuation, value: LISP.Object) => LISP.Suspend;
@@ -95,6 +96,7 @@ export declare const is: {
     Promise: (o: unknown) => o is LISP.IPromise;
     Error: (o: unknown) => o is LISP.IError;
     Continuation: (o: unknown) => o is LISP.IContinuation;
+    Library: (o: unknown) => o is LISP.ILibrary;
     JS: (o: unknown) => o is LISP.IJS;
     List: (v: unknown) => v is LISP.List;
     Procedure: (o: unknown) => o is LISP.Procedure;
@@ -135,6 +137,7 @@ export declare const assert: {
     Record: (v: any, message?: string | undefined) => asserts v is LISP.IRecord;
     MultiValue: (v: any, message?: string | undefined) => asserts v is LISP.IMultiValue;
     Port: (v: any, message?: string | undefined) => asserts v is LISP.IPort;
+    Library: (v: any, message?: string | undefined) => asserts v is LISP.ILibrary;
     Lists: (vs: any, message?: string | undefined) => asserts vs is LISP.List[];
     Pairs: (vs: any, message?: string | undefined) => asserts vs is LISP.IPair[];
     Symbols: (vs: any, message?: string | undefined) => asserts vs is LISP.ISymbol[];
@@ -153,6 +156,7 @@ export declare const assert: {
 export declare const assertNonNull: <T = unknown>(v: T, message?: string) => asserts v is NonNullable<T>;
 export declare const assertArray: (v: unknown, message?: string) => asserts v is Array<any>;
 export declare const isDictionary: (o: unknown) => o is Dictionary<any>;
+export declare const isOneOf: <T extends readonly any[]>(o: unknown, arr: T) => o is T[number];
 export declare const isEnvelope: (o: (any)) => o is Envelope;
 export declare const isCurrentVersionEnvelope: (o: (any)) => o is Envelope;
 export declare type SuspendEnvelope = Envelope & {

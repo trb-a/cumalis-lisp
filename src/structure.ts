@@ -3,40 +3,104 @@
 
 
 import { eqvQ } from "./equivalence";
-import { LISP } from "./types";
+import { condExpand } from "./expression";
+import { readFile } from "./misc";
+import { Dictionary, LISP } from "./types";
 import { writeObject } from "./unparser";
-import { assertNonNull, assert, is,  contentStack, create, forms, defineBuiltInProcedure, formalsToParameters, listToArray, contentCS, nextStack } from "./utils";
+import { assertNonNull, assert, is, contentStack, create, forms, defineBuiltInProcedure, formalsToParameters, listToArray, contentCS, nextStack, isOneOf, transferCS, forkCS, createCS } from "./utils";
 
 // ------------------------------------------------
 
-// Note: Very limited support.
-// Only importing built-in library at the top-level is supported.
-// only, except, prefix, rename is not supported.
 export const Import = defineBuiltInProcedure("import", [
   { name: "sets", type: "variadic", evaluate: false }
 ], ({ sets }, itrp, stack): LISP.Object => {
   assert.Objects(sets);
   assertNonNull(itrp);
   assertNonNull(stack);
-
   const isTopLevel = nextStack(contentCS(stack).env.static) ? false : true;
-  if (!isTopLevel) {
-    throw create.Error("not-implemented", `"import" is only supported on the toplevel.`);
-  }
-  const setStrs = sets.map(item => writeObject(item));
-  if (setStrs.some(item => ["(only ", "(except ", "(prefix ", "(rename "].some(str => item.indexOf(str) === 0))) {
-    throw create.Error("not-implemented", `"import" with "only", "except", "prefix", or "rename" is not supported yet.`);
-  }
-  for (const item of setStrs) {
-    if (item === "(scheme base)") {
-      continue; // "(scheme base)" is loaded by default.
+  const fn = (set: LISP.Object): Dictionary<LISP.Object> => {
+    if (is.Pair(set) && is.Symbol(set[1]) && isOneOf(set[1][1], ["only", "except", "prefix", "rename"] as const)) {
+      const modifier = set[1][1];
+      const [, innerSet, ...arr] = listToArray(set);
+      if (!innerSet) {
+        throw create.Error("error", "Illegal import syntax. No import set after only, except, prefix, or rename.");
+      }
+      if (modifier === "only") {
+        assert.Symbols(arr, "Illegal import syntax (only).");
+        const result = {} as Dictionary<LISP.Object>;
+        for (const [key, value] of Object.entries(fn(innerSet))) {
+          if (arr.some(item => item[1] === key)) {
+            result[key] = value;
+          }
+        }
+        return result;
+      } else if (modifier === "except") {
+        assert.Symbols(arr, "Illegal import syntax (except).");
+        const result = {} as Dictionary<LISP.Object>;
+        for (const [key, value] of Object.entries(fn(innerSet))) {
+          if (arr.some(item => item[1] !== key)) {
+            result[key] = value;
+          }
+        }
+        return result;
+      } else if (modifier === "prefix") {
+        if (arr.length !== 0 || !is.Symbol(arr[0])) {
+          assert.Symbols(arr, "Illegal import syntax (prefix).");
+        }
+        const prefix = arr[0][1] as string;
+        const result = {} as Dictionary<LISP.Object>;
+        for (const [key, value] of Object.entries(fn(innerSet))) {
+          result[prefix + key] = value;
+        }
+        return result;
+      } else if (modifier === "rename") {
+        const result = fn(innerSet);
+        for (const item of arr) {
+          assert.Pair(item, "Illegal import syntax (rename).");
+          assert.Symbol(item[1], "Illegal import syntax (rename).");
+          assert.Pair(item[2], "Illegal import syntax (rename).");
+          assert.Symbol(item[2][1], "Illegal import syntax (rename).");
+          const [, from, [, to]] = item;
+          const value = result[from[1]];
+          assertNonNull(value, `Identifier ${from[1]} is not found in the original set.`);
+          delete result[from[1]];
+          result[to[1]] = value;
+        }
+        return result;
+      } else {
+        return {}; // Never.
+      }
+    } else {
+      const name = writeObject(set);
+      if (name === "(scheme base)") {
+        return {}; // "(scheme base)" is loaded by default.
+      }
+      const builtin = itrp.getBuiltInLibrary(name);
+      if (builtin) {
+        return builtin(itrp);
+      }
+      const library = itrp.getStatic(contentCS(stack).env.static, create.Symbol(name));
+      if (is.Library(library)) {
+        const result = {} as Dictionary<LISP.Object>;
+        const [, libraryMap, libraryEnv] = library;
+        for (const [from, to] of Object.entries(libraryMap)) {
+          const value = itrp.getStatic(libraryEnv.static, create.Symbol(from));
+          if (!value) {
+            throw create.Error("error", `Invalid library export "${from[1]}" (exported as "${to[1]}")`);
+          }
+          result[to] = value;
+        }
+        return result;
+      }
+      throw create.Error("error", `Library "${set}" not found.`);
     }
-    const lib = itrp.getBuiltInLibrary(item);
-    if (!lib) {
-      throw create.Error("error", `Library "${item}" not found.`);
-    }
-    const dict = lib(itrp);
+  }
+  for (const set of sets) {
+    const dict = fn(set);
     for (const name of Object.keys(dict)) {
+      if (!isTopLevel && !is.Undefined(contentStack(contentCS(stack).env.static)[name] ?? ["<undefined>"])) {
+        throw create.Error("redefine-variable", null);
+      }
       itrp.defineStatic(contentCS(stack).env.static, create.Symbol(name), dict[name]);
     }
   }
@@ -187,12 +251,12 @@ const defineRecordType = defineBuiltInProcedure("define-record-type", [
   {
     const vrec = create.Symbol("rec"); // as variable
     itrp.defineStatic(contentCS(stack).env.static, cname,
-      create.Procedure("lambda", cparams.map(i => ({name: i[1]})),
-      forms.BeginIfMultiple(
-        forms.Define(vrec, forms.CallBuiltIn("make-record", type)),
-        ...cparams.map(cparam => forms.CallBuiltIn("record-set!", vrec, cparam, cparam)),
-        vrec
-      ), false, env)
+      create.Procedure("lambda", cparams.map(i => ({ name: i[1] })),
+        forms.BeginIfMultiple(
+          forms.Define(vrec, forms.CallBuiltIn("make-record", type)),
+          ...cparams.map(cparam => forms.CallBuiltIn("record-set!", vrec, cparam, cparam)),
+          vrec
+        ), false, env)
     );
   }
   // Define predicate procedure.
@@ -257,7 +321,7 @@ const recordTypeQ = defineBuiltInProcedure("record-type?", [
   assert.Object(rec);
   assert.RecordType(type);
   if (is.Record(rec)) {
-    return eqvQ.body({obj1: rec[1], obj2: type});
+    return eqvQ.body({ obj1: rec[1], obj2: type });
   } else {
     return create.Boolean(false);
   }
@@ -266,7 +330,7 @@ const recordTypeQ = defineBuiltInProcedure("record-type?", [
 // Hidden procedure
 const recordGet = defineBuiltInProcedure("record-get", [
   { name: "rec" },
-  { name: "field", evaluate: false},
+  { name: "field", evaluate: false },
 ], ({ rec, field }): LISP.Object => {
   assert.Record(rec);
   assert.Symbol(field);
@@ -277,8 +341,8 @@ const recordGet = defineBuiltInProcedure("record-get", [
 // Hidden procedure
 const recordSetD = defineBuiltInProcedure("record-set!", [
   { name: "rec" },
-  { name: "field", evaluate: false},
-  { name: "value"},
+  { name: "field", evaluate: false },
+  { name: "value" },
 ], ({ rec, field, value }): LISP.Object => {
   assert.Record(rec);
   assert.Symbol(field);
@@ -290,11 +354,103 @@ const recordSetD = defineBuiltInProcedure("record-set!", [
   return ["<undefined>"];
 }, false, true);
 
-// Library feature is not supported yet.
-// define-library
+const defineLibrary = defineBuiltInProcedure("define-library", [
+  { name: "name", evaluate: false },
+  { name: "decls", type: "variadic", evaluate: false },
+], ({ name, decls }, itrp, stack) => {
+  assert.Object(name);
+  assert.Pairs(decls);
+  assertNonNull(itrp);
+  assertNonNull(stack);
+  const nameStr = writeObject(name);
+  const isTopLevel = nextStack(contentCS(stack).env.static) ? false : true;
+  if (!isTopLevel && !is.Undefined(contentStack(contentCS(stack).env.static)[nameStr] ?? ["<undefined>"])) {
+    throw create.Error("redefine-variable", null);
+  }
+  // Note: This creates new environment.
+  // Note: R7RS doesn't say clearly, but hope creating void environment is doing right.
+  const newEnv: LISP.Env = contentCS(createCS(create.Undefined())).env;
+  // const env = contentCS(stack).env;
+  // const newEnv: LISP.Env = { static: addStaticNS(env.static), dynamic: env.dynamic};
+
+  const library = create.Library({}, newEnv);
+
+  const exprs: LISP.Object[] = [];
+  const readFilenames: string[] = [];
+  const fn = (decls: LISP.Pair[]) => {
+    for (const decl of decls) {
+      const [, car, cdr] = decl;
+      assert.Symbol(car, "Illegal syntax of define-library-syntax");
+      if (car[1] === "export") {
+        // export
+        assert.List(cdr, "Illegal syntax of export.");
+        for (const spec of listToArray(cdr)) {
+          if (is.Symbol(spec)) {
+            // define symbols as default value.
+            itrp.defineStatic(newEnv.static, spec, create.Undefined());
+            // set the name to <library> object.
+            library[1][spec[1]] = spec[1];
+          } else if (is.Pair(spec)) {
+            if (is.Symbol(spec[1]) && spec[1][1] === "rename" && is.Pair(spec[2]) && is.Pair(spec[2][2])) {
+              const [, from, [, to]] = spec[2];
+              assert.Symbol(from, "Illegal renaming symbol(from) of export in define-library");
+              assert.Symbol(to, "Illegal renaming symbol(to) of export in define-library");
+              // define symbols as default value.
+              itrp.defineStatic(newEnv.static, from, create.Undefined());
+              // set the name to <library> object.
+              library[1][from[1]] = to[1];
+            } else {
+              throw create.Error("error", "Illegal syntax of export in define-library");
+            }
+          } else {
+            throw create.Error("error", "Illegal syntax of export in define-library");
+          }
+        }
+      } else if (car[1] === "include-library-declarations") {
+        assert.List(cdr, "Illegal syntax of include-library-declarations");
+        const filenames = listToArray(cdr);
+        assert.Strings(filenames, "Illegal filename of include-library-declarations");
+        for (const filename of filenames) {
+          if (!readFilenames.includes(filename[1])) { // Avoid to read multiple times.
+            const readExpr = readFile.body({ filename }, itrp);
+            assert.Pair(readExpr);
+            assert.List(readExpr[2]);
+            const includedDecls = listToArray(readExpr[2])
+            assert.Pairs(includedDecls, `Illegal declarations in file ${filename[1]}`);
+            fn(includedDecls);
+          }
+        }
+      } else if (car[1] === "cond-expand") {
+        assert.List(cdr, "Illegal syntax of cond-expand in define-library");
+        const [clause1, ...clauses] = listToArray(cdr);
+        const ret = condExpand.body({ clause1, clauses }, itrp, stack);
+        if (!is.Undefined(ret)) {
+          const [, ...subdecls] = listToArray(ret);
+          assert.Pairs(subdecls, "Illegal result of cond-expand in define-library");
+          fn(subdecls);
+        }
+      } else if (["import", "begin", "include", "include-cli"].includes(car[1])) {
+        exprs.push(decl);
+      } else {
+        throw create.Error("error", "Illegal declaration in define-library");
+      }
+    }
+  };
+  fn(decls);
+
+  // Note: This two call-stack executes
+  //  1. libraryCS in library's environment.
+  //     executes the content of the library.
+  //     create.MultiValue([]) means not returning any value because baseCS doesn't expect any value.
+  //  2. baseCS. in the current environment.
+  //     defines the library name in the current environment.
+  const baseCS = transferCS(stack, forms.Define(create.Symbol(nameStr), library));
+  const libraryCS = forkCS(baseCS, forms.Begin(...exprs, create.MultiValue([])), { env: newEnv });
+  return libraryCS;
+});
 
 export const procedures = {
   Import,
   define, defineValues, defineSyntax, defineSyntax1, defineRecordType,
-  makeRecord, recordTypeQ, recordGet, recordSetD,
+  makeRecord, recordTypeQ, recordGet, recordSetD, defineLibrary
 };

@@ -1,9 +1,7 @@
 import type { BuiltInLibraryDefinition } from "../interpreter"
-import { parser } from "../parser";
-import { readChar } from "../port";
+import { readFile } from "../misc";
 import { Dictionary, LISP } from "../types";
-import { assert, assertNonNull, create, defineBuiltInProcedure, forms, is } from "../utils";
-import { openInputFile } from "./file";
+import { assert, assertNonNull, create, defineBuiltInProcedure, forms } from "../utils";
 import { interactionEnvironment } from "./repl";
 
 // (load filename environment-specifier)
@@ -21,31 +19,12 @@ const load = defineBuiltInProcedure("load", [
   } else {
     spec = interactionEnvironment.body()
   }
-  const port = openInputFile.body({ str: filename}, itrp);
 
-  // Slurp file.
-  let line = "";
-  for (; ;) {
-    const ret = readChar.body({ port }, itrp, stack);
-    if (is.EndOfFile(ret)) {
-       break;
-    } else {
-      line = line + ret[1];
-    }
-  }
-  // Parse file
-  let datum;
-  try {
-    datum = parser(line, { filename: filename[1] });
-  } catch (e) {
-    if (e instanceof Error) {
-      throw create.Error("read-error", e.message);
-    } else {
-      throw create.Error("read-error", "Error occured while reading.");
-    }
-  }
+  // Read the file.
+  const expr = readFile.body({ filename }, itrp);
+
   // finally evaluate the datum.
-  return forms.CallBuiltIn("eval", datum, spec);
+  return forms.CallBuiltIn("eval", expr, spec);
 }, true, true);
 
 const procedures = [load];
