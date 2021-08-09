@@ -57,7 +57,7 @@ $ npm install cumalis-lisp
 With these features, The following application fields can be considered.
 
 - Macro system for online applications. (Programs can be built as simple Javascript objects.)
-- Agent systems. (Send running application via network and continue to run on another machine.)
+- Mobile agent systems. (Send running application via network and continue to run on another machine.)
 - Games that need to save the running status.
 - Work-flow systems.
 - Backend of Web-based visual programming environment, like [scratch-blocks](https://github.com/LLK/scratch-blocks) or [Blockly](https://developers.google.com/blockly).
