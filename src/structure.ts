@@ -92,7 +92,7 @@ export const Import = defineBuiltInProcedure("import", [
         }
         return result;
       }
-      throw create.Error("error", `Library "${set}" not found.`);
+      throw create.Error("error", `Library "${name}" not found.`);
     }
   }
   for (const set of sets) {
