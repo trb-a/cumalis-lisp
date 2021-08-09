@@ -89,6 +89,8 @@ const num = toJS(ret); // returns 2.
 ### Defining built-in procedures / built-in macros
 
 ```typescript
+import { Interpreter, is, create, toJS, fromJS, defineBuiltInProcedure } from "cumalis-lisp";
+
 const itrp = new Interpreter(); // Create interpreter.
 const helloProc = defineBuiltInProcedure("hello", [ // Define procedure
   { name: "obj" }
@@ -119,30 +121,36 @@ console.log(toJS(itrp.eval(`(hello2 "WORLD")`))); // => HELLO WORLD
 ### Suspend / serialize / deserialize / resume
 
 ```Typescript
-  const itrp = new Interpreter(); // Create interpreter.
+import {
+  Interpreter, LISP, create, toJS,
+  SuspendEnvelope, isSuspendEnvelope, suspendValueFromEnvelope,
+  toReferentialJSON, fromReferentialJSON,
+} from "cumalis-lisp";
 
-  // Suspend
-  let suspend: SuspendEnvelope | null = null;
-  try {
-    itrp.eval(`(+ 11 (suspend "SUSPEND HERE"))`);
-  } catch (e) {
-    if (isSuspendEnvelope(e)) {
-      suspend = e;
-    } else {
-      throw e;
-    }
+const itrp = new Interpreter(); // Create interpreter.
+
+// Suspend
+let suspend: SuspendEnvelope | null = null;
+try {
+  itrp.eval(`(+ 11 (suspend "SUSPEND HERE"))`);
+} catch (e) {
+  if (isSuspendEnvelope(e)) {
+    suspend = e;
+  } else {
+    throw e;
   }
-  if (suspend) {
-    console.log(toJS(suspendValueFromEnvelope(suspend))); // => "SUSPEND HERE"
+}
+if (suspend) {
+  console.log(toJS(suspendValueFromEnvelope(suspend))); // => "SUSPEND HERE"
 
-    // Serialize/Deserialize
-    const json = toReferentialJSON(suspend, "$$$");
-    const revived: LISP.Suspend = fromReferentialJSON(json, "$$$");
+  // Serialize/Deserialize
+  const json = toReferentialJSON(suspend, "$$$");
+  const revived: LISP.Suspend = fromReferentialJSON(json, "$$$");
 
-    // Resume
-    const ret = itrp.resume(revived, create.Number(31));
-    console.log(toJS(ret)); // => 42
-  }
+  // Resume
+  const ret = itrp.resume(revived, create.Number(31));
+  console.log(toJS(ret)); // => 42
+}
 
 ```
 
