@@ -83,7 +83,8 @@ const ret = itrp.eval(`
         (+ (fib (- n 1)) (fib (- n 2)))))
   (fib 10)
 `); // Evaluate S-expression.
-const num = toJS(ret); // returns 2.
+const num = toJS(ret); // returns 55.
+
 ```
 
 ### Defining built-in procedures / built-in macros
@@ -160,22 +161,24 @@ To handle files in Cumalis Lisp on Node.js, "fs" object must be passed to the in
 as a constructor's option when you create a Interpreter instance.
 
 ```Typescript
-  import fs from "fs";
-  const itrp = new Interpreter({fs}); // <= set "fs" object as option.
-  itrp.eval(`
-    (import (scheme file))
-    (if (file-exists? "some-file.txt")
-      (with-input-from-file "some-file.txt"
-        (define x (read-line))
-        ...
-    (with-output-to-file "some-other-file.txt"
-      (lambda ()
-        (write-char #\a)
-        (write-string "ABC")
-        (newline)
-        ...
-    (delete-file "some-file.txt")
-  `);
+import { Interpreter } from "cumalis-lisp";
+import fs from "fs";
+const itrp = new Interpreter({fs}); // <= set "fs" object as option.
+itrp.eval(`
+  (import (scheme file))
+  (if (file-exists? "some-file.txt")
+    (with-input-from-file "some-file.txt"
+      (define x (read-line))
+      ...
+  (with-output-to-file "some-other-file.txt"
+    (lambda ()
+      (write-char #\a)
+      (write-string "ABC")
+      (newline)
+      ...
+  (delete-file "some-file.txt")
+`);
+
 ```
 
 Note: If you want to serialize / deserialize suspended continuations, open files status (seek position, open/close status, etc) can't be recovered when you deserialize / resume. It will cause unexpected behaviour. Be sure to close files before suspend / serialization.
