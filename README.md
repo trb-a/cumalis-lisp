@@ -46,7 +46,7 @@ $ npm install cumalis-lisp
   * (scheme r5rs)
 - Proper tail recursion. (tail call optimization)
 - Javascript interfaces
-  * Adding built-in procedures.
+  * Adding built-in syntaxes, procedures, libraries.
   * Able to write expressions as Javascript Arrays and evaluate.
   * Able to contain Javascript objects in AST.
 - All objects, AST, and call-frames consist of pure JSON objects.
@@ -67,9 +67,11 @@ With these features, The following application fields can be considered.
 Note: Implementations of Scheme are not required to implement fraction and complex numbers. See section
 "6.2.3. Implementation restrictions" on R7RS.
 
-## Web REPL
+## Web REPL & Sandbox
 
   [Cumalis Lisp Web REPL](https://trb-a.github.io/cumalis-lisp/web-repl.html)
+
+  [CodeSandbox Template](https://codesandbox.io/s/using-cumalis-lisp-xvmjc?file=/src/index.ts)
 
 ## How to use as a module
 
