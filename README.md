@@ -15,7 +15,7 @@ $ npm install cumalis-lisp
 
 ## Features
 
-- Implemented almost all of R7RS (small) except complex/fraction numbers, including:
+- Almost full implementation of R7RS (small) except complex/fraction numbers, including:
   * call-with-current-continuation (call/cc).
   * guard / with-exception-handler / raise / raise-continuable.
   * dynamic-wind.
@@ -63,6 +63,9 @@ With these features, The following application fields can be considered.
 - Backend of Web-based visual programming environment, like [scratch-blocks](https://github.com/LLK/scratch-blocks) or [Blockly](https://developers.google.com/blockly).
   * Note: Cumalis Lisp is expected to be the backend of ["Cumalis"](https://cumalis.net/) in the next major version.
 - etc.
+
+Note: Implementations of Scheme are not required to implement fraction and complex numbers. See section
+"6.2.3. Implementation restrictions" on R7RS.
 
 ## Web REPL
 
