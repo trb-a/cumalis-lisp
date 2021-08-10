@@ -831,7 +831,7 @@ const syntaxRules = defineBuiltInProcedure("syntax-rules", [
     return s[1];
   });
 
-  // Convert a LISP tree to be "hyienic".
+  // Convert a LISP tree to be "hygenic".
   // 1. Add call-stack information to all the bound symbols.
   // 2. Set keys for all unbound symbols except literals, ellipsis, and "_".
   const fn = (node: LISP.Object, renameMap = new Map<string, LISP.Symbol>()): LISP.Object => {
