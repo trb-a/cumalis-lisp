@@ -48,7 +48,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [0.5.5](https://github.com/trb-a/cumalis-lisp/compare/v0.5.4...v0.5.5) (2021-07-31)
 
-- Switch local-web-server from local-web-server to serve (for Web REPL development)
+- Switch local-web-server to serve (for Web REPL development)
 - Added (scheme write) (scheme read) built-in library.
 
 ### [0.5.4](https://github.com/trb-a/cumalis-lisp/compare/v0.5.3...v0.5.4) (2021-07-30)
