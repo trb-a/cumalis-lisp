@@ -26,8 +26,8 @@
   ],
   "scripts": {
     "prebuild": "yarn test && yarn clean",
-    "build": "yarn build:types && yarn build:js",
-    "build:js": "rollup -c",
+    "build": "yarn build:js && yarn build:types",
+    "build:js": "vite build",
     "build:types": "tsc --emitDeclarationOnly",
     "clean": "rimraf dist",
     "lint": "eslint src/**/* --fix",
@@ -37,18 +37,11 @@
     "pretest": "yarn lint",
     "test": "jest --testPathIgnorePatterns='run.*'",
     "test:cov": "yarn test -- --coverage",
-    "test:run": "babel-node -x .ts __tests__/run.ts",
+    "test:run": "esno __tests__/run.ts",
     "types:check": "tsc --noEmit",
-    "start": "yarn serve docs"
+    "start": "yarn vite"
   },
   "devDependencies": {
-    "@babel/core": "^7.14.6",
-    "@babel/node": "^7.14.7",
-    "@babel/preset-env": "^7.14.7",
-    "@babel/preset-typescript": "^7.14.5",
-    "@rollup/plugin-commonjs": "^19.0.0",
-    "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^13.0.0",
     "@types/jest": "^26.0.23",
     "@types/jquery": "^3.5.6",
     "@types/node": "^15.12.4",
@@ -56,16 +49,14 @@
     "@typescript-eslint/parser": "^4.28.0",
     "eslint": "^7.29.0",
     "eslint-plugin-jest": "^24.3.6",
+    "esno": "^0.9.1",
     "jest": "^27.0.5",
     "jquery.terminal": "^2.27.1",
     "rimraf": "^3.0.2",
-    "rollup": "^2.52.2",
-    "rollup-plugin-babel": "^4.4.0",
-    "rollup-plugin-terser": "^7.0.2",
-    "serve": "^12.0.0",
     "standard-version": "^9.3.1",
     "ts-node": "^10.1.0",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "vite": "^2.5.10"
   },
   "dependencies": {}
 }
