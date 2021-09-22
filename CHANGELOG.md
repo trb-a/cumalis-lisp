@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+- Switch rollup/babel-node/serve to vite/esno
+- fix: Radix of number->string should be optional #1
+
 ## [0.6.0](https://github.com/trb-a/cumalis-lisp/compare/v0.5.16...v0.6.0) (2021-08-12)
 
 ### [0.5.16](https://github.com/trb-a/cumalis-lisp/compare/v0.5.15...v0.5.16) (2021-08-09)

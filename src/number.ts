@@ -455,7 +455,6 @@ const numberToString = defineBuiltInProcedure("number->string", [
   { name: "radix", type: "optional" },
 ], ({ z, radix }) => {
   assert.Number(z);
-  assert.Number(radix);
   const num = numberToJSNumber(z);
   if (isNaN(num)) {
     return create.String("+nan.0", false);

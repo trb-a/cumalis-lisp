@@ -2440,7 +2440,6 @@
 (test-end)
 
 
-
 (test-begin "define-library")
 
 (define-library (test lib)
@@ -2470,6 +2469,14 @@
 (test #t (error-object? (guard (exn (else exn)) (bar4 1) )))
 
 (test #t (error-object? (guard (exn (else exn)) (my-foo2 5) )))
+
+(test-end)
+
+
+(test-begin "bug fix")
+
+; https://github.com/trb-a/cumalis-lisp/issues/1
+(test "42" (number->string 42))
 
 (test-end)
 
