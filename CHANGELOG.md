@@ -2,6 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+- Added exception message to Error.stack
 - Switch rollup/babel-node/serve to vite/esno
 - fix: Radix of number->string should be optional #1
 
