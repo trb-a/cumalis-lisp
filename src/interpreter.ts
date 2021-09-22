@@ -423,10 +423,11 @@ export class Interpreter {
       if (is.Exception(e)) {
         const [, stack, v] = e;
         const [, name, message] = is.Error(v) ? v : [null, "exception", writeObject(v)];
-        const trace = arrayCS(stack).map(([, { depth, want, expr, info }]) => (
-          `${depth}: ${want ?? "initial"}: ${writeObject(expr, {maxdepth: 20}).slice(0,100)}: ${JSON.stringify(info)}`
-        )).join("\n") + "\n";
-
+        const trace = "Exception: " +
+          ((message ?? name) + "\n") +
+          arrayCS(stack).map(([, { depth, want, expr, info }]) => (
+            `${depth}: ${want ?? "initial"}: ${writeObject(expr, { maxdepth: 20 }).slice(0, 100)}: ${JSON.stringify(info)}`
+          )).join("\n") + "\n";
         if (this.options.debug) {
           logger.log(`UNHANDLED ERROR: ${name}, ${message}\n${trace}`);
         }

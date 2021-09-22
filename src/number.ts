@@ -50,8 +50,7 @@ const inexactQ = defineBuiltInProcedure("inexact?", [
 
 const exactIntegerQ = defineBuiltInProcedureAlias("exact-integer?", exactQ);
 
-// finite?
-// nan?
+// finite? inexact library
 
 const eq = defineBuiltInProcedure("=", [
   { name: "z1" },
